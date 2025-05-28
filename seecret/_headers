@@ -1,0 +1,17 @@
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/*.js
+  Content-Type: text/javascript
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/*.css
+  Content-Type: text/css
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/*.html
+  Content-Type: text/html
+  Cache-Control: no-cache, no-store, must-revalidate

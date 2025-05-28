@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friday Games</title>
+    <link rel="icon" type="image/png" href="GAME.PNG">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        .bg-dots {
+            background-image: url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="2" fill="%23000000" fill-opacity="0.05"/></svg>');
+            background-repeat: repeat;
+            background-size: 40px 40px;
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            animation: dots-vertical-scroll 6s linear infinite;
+        }
+        @keyframes dots-vertical-scroll {
+            0% {
+                background-position-y: 0px;
+            }
+            100% {
+                background-position-y: 40px;
+            }
+        }
+        @media (max-width: 640px) {
+            .tagline-mobile-margin {
+                margin-bottom: 8px !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen relative">
+    <!-- Background pattern -->
+    <div class="bg-dots"></div>
+    
+    <!-- Main content -->
+    <div class="relative z-10 container mx-auto px-4 py-12">
+        <!-- Logo at the top -->
+        <header class="w-full flex flex-col items-center pt-14 sm:pt-16 pb-8">
+            <img src="favicon/fridaygames.png" alt="Friday Games Logo"
+                 class="h-24 max-w-[300px] w-auto mb-4 object-contain" />
+            <div style="
+              font-family: 'Inter', 'Helvetica Neue', sans-serif;
+              font-size: 18px;
+              color: #333;
+              font-weight: 400;
+              letter-spacing: 0.3px;
+              text-align: center;
+              line-height: 1.4;
+              margin-bottom: 24px;
+            " class="tagline-mobile-margin">
+              Escape the weekday. Play like it's Friday.
+            </div>
+        </header>
+
+        <!-- Game Tiles Section -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-0 gap-y-4 sm:gap-8 justify-items-center mt-12 max-w-4xl mx-auto">
+            <!-- Word Play -->
+            <a href="wordplay/wordplay.html" class="flex flex-col items-center group animate-fade-in-up" style="animation-delay: 0.2s">
+                <div class="w-24 h-24 bg-white rounded-2xl shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 min-w-[96px] min-h-[96px] flex items-center justify-center overflow-hidden">
+                    <img src="favicon/wordplay.png" alt="Word Play" class="w-32 h-32 object-cover" />
+                </div>
+                <p class="mt-3 text-base sm:text-lg font-semibold text-gray-800 group-hover:text-black transition-colors">Word Play</p>
+            </a>
+
+            <!-- Seecret -->
+            <a href="seecret/index.html" class="flex flex-col items-center group animate-fade-in-up" style="animation-delay: 0.3s">
+                <div class="w-24 h-24 bg-white rounded-2xl shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 min-w-[96px] min-h-[96px] flex items-center justify-center overflow-hidden">
+                    <img src="favicon/seecret.png" alt="Seecret" class="w-32 h-32 object-cover">
+                </div>
+                <p class="mt-3 text-base sm:text-lg font-semibold text-gray-800 group-hover:text-black transition-colors">Seecret</p>
+            </a>
+
+            <!-- Coming Soon -->
+            <div class="flex flex-col items-center group animate-fade-in-up" style="animation-delay: 0.4s">
+                <div class="w-24 h-24 bg-white rounded-2xl shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:scale-105 min-w-[96px] min-h-[96px] flex items-center justify-center relative overflow-hidden">
+                    <img src="favicon/comingsoon.png" alt="Coming Soon" class="w-32 h-32 object-cover opacity-75">
+                </div>
+                <p class="mt-3 text-base sm:text-lg font-semibold text-gray-500 group-hover:text-gray-600 transition-colors">Coming Soon</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-sm text-gray-400 mt-16 mb-6 animate-fade-in-up" style="animation-delay: 0.5s">
+            Made with <span class="text-black">🖤</span> by Friday Empire
+        </footer>
+    </div>
+</body>
+</html> 
