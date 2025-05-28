@@ -1,0 +1,36 @@
+{
+  "puzzles": [
+    {
+      "image": "cornucopia.jpg",
+      "answer": "CORNUCOPIA"
+    },
+    {
+      "image": "chandelier.jpg",
+      "answer": "CHANDELIER"
+    },
+    {
+      "image": "zipper.jpg",
+      "answer": "ZIPPER"
+    },
+    {
+      "image": "flamingo.jpg",
+      "answer": "FLAMINGO"
+    },
+    {
+      "image": "pawn.png",
+      "answer": "PAWN"
+    },
+    {
+      "image": "antlers.jpg",
+      "answer": "ANTLERS"
+    },
+    {
+      "image": "guitar.jpg",
+      "answer": "GUITAR"
+    },
+    {
+      "image": "jellyfish.jpg",
+      "answer": "JELLYFISH"
+    }
+  ]
+} 
