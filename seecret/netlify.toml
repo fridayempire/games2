@@ -9,8 +9,8 @@
   force = true
 
 [[redirects]]
-  from = "/seecret/*"
-  to = "/seecret/index.html"
+  from = "/*"
+  to = "/index.html"
   status = 200
 
 [[headers]]

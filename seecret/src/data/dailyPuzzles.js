@@ -3,15 +3,15 @@ import scarabImage from '../assets/scarab.jpg';
 export const dailyPuzzles = [
   {
     id: 1,
-    image: 'https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&w=1200&q=80',
-    answer: 'Coral',
-    hint: 'Ocean builder'
+    image: "https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&w=1200&q=80",
+    answer: "Coral",
+    hint: "Ocean builder"
   },
   {
     id: 2,
-    image: scarabImage,
-    answer: 'Scarab',
-    hint: 'Ancient beetle'
+    image: "/images/scarab.jpg",
+    answer: "Scarab",
+    hint: "Ancient Egyptian symbol"
   },
   {
     id: 3,

@@ -1,0 +1,278 @@
+/* Dusk Til Gone - style.css */
+:root {
+  --bg: #181622;
+  --window-glow: radial-gradient(circle at 50% 40%, #ffe066 0%, #e0b0ff 60%, #3b2352 100%);
+  --grid-bg: rgba(243, 233, 255, 0.7);
+  --cell-light: #f8f6ff;
+  --cell-dark: #2d253a;
+  --cell-glow: 0 0 12px 2px #ffe06688, 0 0 24px 4px #7c3aed44;
+  --piece: #6d4e3c;
+  --piece-shadow: #2d1c13;
+  --piece-hover: #a97c50;
+  --piece-jagged: repeating-linear-gradient(135deg, #6d4e3c 0 6px, #4b3a2f 6px 12px);
+  --purple: #7c3aed;
+  --deep-purple: #3b2352;
+  --modal-bg: rgba(24, 22, 34, 0.97);
+  --tray-overlay-0: transparent;
+  --tray-overlay-1: rgba(40,0,60,0.15);
+  --tray-overlay-2: rgba(40,0,60,0.35);
+  --tray-overlay-3: rgba(40,0,60,0.6);
+  --tray-overlay-4: rgba(20,0,30,0.85);
+  --win: #e0b0ff;
+  --font: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: #fff;
+  font-family: var(--font);
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+#game-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 2rem auto 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  font-size: 2.3rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: var(--win);
+  margin-bottom: 1.2rem;
+  text-shadow: 0 2px 16px var(--deep-purple), 0 0 8px #ffe06688;
+}
+
+#window-frame {
+  position: relative;
+  width: 288px;
+  height: 288px;
+  margin-bottom: 2rem;
+  border-radius: 24px;
+  box-shadow: 0 8px 48px #000a, 0 0 0 8px #7c3aed44;
+  overflow: visible;
+}
+#window-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: var(--window-glow);
+  z-index: 0;
+  filter: blur(2px) brightness(1.1);
+}
+#window-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 4px;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: none;
+}
+.grid-cell {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(145deg, var(--cell-light) 80%, var(--cell-dark) 100%);
+  border-radius: 8px;
+  box-shadow: var(--cell-glow);
+  border: 2px solid #ffe06688;
+  transition: background 0.3s, box-shadow 0.3s;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+.grid-cell.covered {
+  background: var(--piece-jagged);
+  box-shadow: 0 2px 8px var(--piece-shadow);
+  border: 2px solid #a97c50;
+}
+
+#piece-tray-container {
+  width: 100%;
+  position: relative;
+  margin-bottom: 2rem;
+  min-height: 80px;
+}
+#piece-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 60px;
+  padding: 12px 0;
+  position: relative;
+  z-index: 2;
+}
+.piece {
+  position: absolute;
+  left: 0; top: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 28px);
+  grid-template-rows: repeat(6, 28px);
+  gap: 2px;
+  pointer-events: auto;
+  cursor: grab;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0005;
+  transition: box-shadow 0.2s, transform 0.2s, opacity 0.2s;
+  z-index: 10;
+  opacity: 1;
+}
+.piece.dragging {
+  opacity: 0.7;
+  box-shadow: 0 8px 32px #000a, 0 0 16px #ffe06688;
+  cursor: grabbing;
+  transform: scale(1.06) rotate(-2deg);
+}
+.piece-cell {
+  width: 28px;
+  height: 28px;
+  background: var(--piece-jagged);
+  border-radius: 6px 10px 8px 7px / 8px 6px 10px 7px;
+  box-shadow: 0 1px 4px var(--piece-shadow);
+  border: 2px solid #a97c50;
+  position: relative;
+  transition: background 0.2s, border 0.2s;
+}
+.piece-cell.ghost {
+  opacity: 0.4;
+  background: var(--win);
+  border: 2px dashed #ffe066;
+}
+
+#tray-darkness-overlay {
+  pointer-events: none;
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  border-radius: 0 0 16px 16px;
+  z-index: 3;
+  transition: background 0.5s;
+  background: var(--tray-overlay-0);
+}
+
+/* Win Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 1;
+  pointer-events: all;
+  transition: opacity 0.3s;
+}
+.modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.modal-content {
+  background: var(--deep-purple);
+  color: var(--win);
+  border-radius: 18px;
+  padding: 2.5rem 2rem 2rem 2rem;
+  box-shadow: 0 8px 32px #000a;
+  text-align: center;
+  min-width: 260px;
+  max-width: 90vw;
+}
+.bat-animation {
+  width: 60px;
+  height: 40px;
+  margin: 1.5rem auto 1rem auto;
+  background: url('data:image/svg+xml;utf8,<svg width="60" height="40" viewBox="0 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M30 20 Q25 10 20 20 Q15 30 10 20 Q5 10 0 20 Q10 40 30 30 Q50 40 60 20 Q55 10 50 20 Q45 30 40 20 Q35 10 30 20 Z" fill="%23e0b0ff" stroke="%237c3aed" stroke-width="2"/></svg>') no-repeat center/contain;
+  animation: bat-flap 1.2s infinite;
+}
+@keyframes bat-flap {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  20% { transform: translateY(-8px) scaleY(1.1); }
+  50% { transform: translateY(0) scaleY(1); }
+  70% { transform: translateY(8px) scaleY(0.9); }
+}
+
+.restart-btn {
+  background: var(--deep-purple);
+  color: var(--win);
+  border: none;
+  border-radius: 12px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 8px #0005;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.restart-btn:hover {
+  background: var(--win);
+  color: var(--deep-purple);
+}
+
+#close-modal {
+  background: var(--win);
+  color: var(--deep-purple);
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+#close-modal:hover {
+  background: var(--deep-purple);
+  color: var(--win);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  #game-container {
+    max-width: 98vw;
+    padding: 0 2vw;
+  }
+  #window-frame {
+    width: 96vw;
+    height: 96vw;
+    min-width: 240px;
+    min-height: 240px;
+    max-width: 98vw;
+    max-height: 98vw;
+  }
+  #window-grid {
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+  }
+  .grid-cell {
+    width: 14vw;
+    height: 14vw;
+    min-width: 32px;
+    min-height: 32px;
+  }
+  #piece-tray {
+    gap: 4vw;
+  }
+  .piece {
+    grid-template-columns: repeat(6, 6vw);
+    grid-template-rows: repeat(6, 6vw);
+  }
+  .piece-cell {
+    width: 6vw;
+    height: 6vw;
+    min-width: 16px;
+    min-height: 16px;
+  }
+} 
