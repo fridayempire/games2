@@ -124,13 +124,12 @@ function render() {
       overlay.style.position = 'absolute';
       overlay.style.left = `${grid.offsetLeft + pos.x*CELL_SIZE}px`;
       overlay.style.top = `${grid.offsetTop + pos.y*CELL_SIZE}px`;
-      overlay.style.width = `${Math.max(...piece.shape.map(s=>s.x))+1}0px`;
-      overlay.style.height = `${Math.max(...piece.shape.map(s=>s.y))+1}0px`;
       overlay.style.width = `${(Math.max(...piece.shape.map(s=>s.x))+1)*CELL_SIZE}px`;
       overlay.style.height = `${(Math.max(...piece.shape.map(s=>s.y))+1)*CELL_SIZE}px`;
       overlay.style.cursor = 'grab';
       overlay.style.background = 'rgba(0,0,0,0)';
       overlay.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
+      overlay.addEventListener('touchstart', e => startDrag(e, piece.id, pos.x, pos.y), {passive: false});
       overlay.style.zIndex = 20;
       document.body.appendChild(overlay);
     }
@@ -165,7 +164,16 @@ function makePieceElement(piece, gridX, gridY) {
     el.appendChild(cell);
   });
   el.addEventListener('mousedown', e => startDrag(e, piece.id, gridX, gridY));
+  el.addEventListener('touchstart', e => startDrag(e, piece.id, gridX, gridY), {passive: false});
   return el;
+}
+
+function getEventXY(e) {
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  } else {
+    return { x: e.clientX, y: e.clientY };
+  }
 }
 
 function startDrag(e, pieceId, gridX, gridY) {
@@ -175,13 +183,14 @@ function startDrag(e, pieceId, gridX, gridY) {
   document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
   const piece = pieces.find(p => p.id === pieceId);
   // Calculate anchor offset (mouse position relative to anchor cell)
+  let {x: clientX, y: clientY} = getEventXY(e);
   let anchorOffset = {x: 0, y: 0};
   if (gridX !== undefined && gridY !== undefined) {
     // Dragging from grid: mouse - anchor cell position
     const grid = document.getElementById('gameGrid');
     const gridRect = grid.getBoundingClientRect();
-    anchorOffset.x = e.clientX - (gridRect.left + gridX * CELL_SIZE);
-    anchorOffset.y = e.clientY - (gridRect.top + gridY * CELL_SIZE);
+    anchorOffset.x = clientX - (gridRect.left + gridX * CELL_SIZE);
+    anchorOffset.y = clientY - (gridRect.top + gridY * CELL_SIZE);
     // Remove piece from board immediately
     piecePositions[pieceId] = null;
     updateGridState();
@@ -189,16 +198,16 @@ function startDrag(e, pieceId, gridX, gridY) {
   } else {
     // Dragging from tray: mouse - top left of piece
     const trayRect = e.target.getBoundingClientRect();
-    anchorOffset.x = e.clientX - trayRect.left;
-    anchorOffset.y = e.clientY - trayRect.top;
+    anchorOffset.x = clientX - trayRect.left;
+    anchorOffset.y = clientY - trayRect.top;
   }
   // Create ghost
   const ghost = makePieceElement(piece);
   ghost.classList.add('ghost-piece', 'dragging');
   ghost.style.position = 'fixed';
   ghost.style.pointerEvents = 'none';
-  ghost.style.left = `${e.clientX - anchorOffset.x}px`;
-  ghost.style.top = `${e.clientY - anchorOffset.y}px`;
+  ghost.style.left = `${clientX - anchorOffset.x}px`;
+  ghost.style.top = `${clientY - anchorOffset.y}px`;
   dragging = {
     id: pieceId,
     anchorOffset,
@@ -208,30 +217,37 @@ function startDrag(e, pieceId, gridX, gridY) {
   document.body.appendChild(ghost);
   document.addEventListener('mousemove', dragMove);
   document.addEventListener('mouseup', dragEnd);
+  document.addEventListener('touchmove', dragMove, {passive: false});
+  document.addEventListener('touchend', dragEnd);
 }
 
 function dragMove(e) {
   if (!dragging || !dragging.ghostEl) return;
-  dragging.ghostEl.style.left = `${e.clientX - dragging.anchorOffset.x}px`;
-  dragging.ghostEl.style.top = `${e.clientY - dragging.anchorOffset.y}px`;
+  if (e.touches && e.touches.length > 0) e.preventDefault();
+  let {x, y} = getEventXY(e);
+  dragging.ghostEl.style.left = `${x - dragging.anchorOffset.x}px`;
+  dragging.ghostEl.style.top = `${y - dragging.anchorOffset.y}px`;
 }
 
 function dragEnd(e) {
   document.removeEventListener('mousemove', dragMove);
   document.removeEventListener('mouseup', dragEnd);
+  document.removeEventListener('touchmove', dragMove);
+  document.removeEventListener('touchend', dragEnd);
   if (!dragging) return;
   if (dragging.ghostEl) dragging.ghostEl.remove();
   // Remove all overlays
   document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
+  let {x, y} = getEventXY(e);
   const grid = document.getElementById('gameGrid');
   const gridRect = grid.getBoundingClientRect();
   // Snap anchor cell to nearest grid cell
-  const x = Math.round((e.clientX - gridRect.left - dragging.anchorOffset.x) / CELL_SIZE);
-  const y = Math.round((e.clientY - gridRect.top - dragging.anchorOffset.y) / CELL_SIZE);
+  const gx = Math.round((x - gridRect.left - dragging.anchorOffset.x) / CELL_SIZE);
+  const gy = Math.round((y - gridRect.top - dragging.anchorOffset.y) / CELL_SIZE);
   const piece = pieces.find(p => p.id === dragging.id);
   // Try to place on grid
-  if (isValidPlacement(piece, x, y)) {
-    piecePositions[piece.id] = {x, y};
+  if (isValidPlacement(piece, gx, gy)) {
+    piecePositions[piece.id] = {x: gx, y: gy};
   } else {
     piecePositions[piece.id] = null;
   }

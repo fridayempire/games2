@@ -44,15 +44,22 @@ h1 {
   transition: background 0.2s;
 }
 .piece-tray {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 20px;
   justify-content: center;
+  align-items: center;
   background: var(--grid-color);
   border-radius: 8px;
   padding: 20px;
   min-height: 170px;
   margin-top: 30px;
+  max-width: 900px;
+  width: 100%;
+  box-sizing: border-box;
+  place-items: center;
+  overflow-x: auto;
+  min-width: 320px;
 }
 .piece {
   position: relative;
