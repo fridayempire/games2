@@ -298,6 +298,11 @@ function dragEnd(e) {
   document.removeEventListener('mouseup', dragEnd);
   document.removeEventListener('touchmove', dragMove);
   document.removeEventListener('touchend', dragEnd);
+  // Only end drag if all touches are lifted
+  if (e && e.type === 'touchend' && e.touches && e.touches.length > 0) {
+    // Still touching, don't end drag yet
+    return;
+  }
   if (!dragging) return;
   if (dragging.ghostEl) dragging.ghostEl.remove();
   // Remove all overlays (now, after drag is complete)
