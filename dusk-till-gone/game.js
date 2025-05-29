@@ -285,12 +285,11 @@ function startDrag(e, pieceId, gridX, gridY) {
 
 function dragMove(e) {
   if (!dragging || !dragging.ghostEl) return;
-  if (e.touches && e.touches.length > 0) e.preventDefault();
+  e.preventDefault(); // Always prevent default for touch events
   let {x, y} = getEventXY(e);
   lastTouchXY = {x, y}; // Store last touch position
   dragging.ghostEl.style.left = `${x - dragging.anchorOffset.x}px`;
   dragging.ghostEl.style.top = `${y - dragging.anchorOffset.y}px`;
-  console.log('dragMove', x, y);
 }
 
 function dragEnd(e) {
@@ -298,27 +297,22 @@ function dragEnd(e) {
   document.removeEventListener('mouseup', dragEnd);
   document.removeEventListener('touchmove', dragMove);
   document.removeEventListener('touchend', dragEnd);
-  // Only end drag if all touches are lifted (robust for all browsers)
-  if (e && e.type === 'touchend') {
-    const touches = (typeof e.touches !== 'undefined') ? e.touches.length : 0;
-    console.log('dragEnd touchend', touches, e);
-    if (touches > 0) {
-      // Still touching, don't end drag yet
-      return;
-    }
-  }
+  
   if (!dragging) return;
+  
+  // Get final position from lastTouchXY for touch events
+  let x, y;
+  if (e.type === 'touchend' && lastTouchXY) {
+    x = lastTouchXY.x;
+    y = lastTouchXY.y;
+  } else {
+    ({x, y} = getEventXY(e));
+  }
+  
   if (dragging.ghostEl) dragging.ghostEl.remove();
   // Remove all overlays (now, after drag is complete)
   document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
-  let x, y;
-  if (e && e.type === 'touchend' && lastTouchXY) {
-    x = lastTouchXY.x;
-    y = lastTouchXY.y;
-    e.preventDefault();
-  } else if (e) {
-    ({x, y} = getEventXY(e));
-  }
+  
   const grid = document.getElementById('gameGrid');
   const gridRect = grid.getBoundingClientRect();
   // Snap anchor cell to nearest grid cell
