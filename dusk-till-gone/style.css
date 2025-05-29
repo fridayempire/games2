@@ -2,7 +2,7 @@
 
 :root {
   --grid-size: 6;
-  --cell-size: 50px;
+  --cell-size: 44px;
   --piece-color: #8B4513; /* Fallback wood color */
   --grid-border: 1px solid rgba(255,255,255,0.3);
   --grid-glow: 0 0 10px rgba(255, 255, 255, 0.1);
@@ -36,6 +36,8 @@ body {
   margin-right: auto;
   float: none;
   align-self: center;
+  justify-content: center;
+  align-items: center;
 }
 
 .header-block {
@@ -209,26 +211,6 @@ h1 {
 
 #gameGrid::before {
   background-color: rgba(0, 0, 0, 0.5);
-}
-
-/* Mobile optimizations */
-@media (max-width: 600px) {
-  :root {
-    --cell-size: 40px;
-  }
-  
-  #game-container {
-    padding: 1rem;
-  }
-  
-  h1 {
-    font-size: 2rem;
-  }
-  
-  .piece {
-    width: 120px;
-    height: 120px;
-  }
 }
 
 #restartBtn {

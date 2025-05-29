@@ -1,6 +1,5 @@
 // Dusk Til Gone - Classic Block Fit Puzzle
 const GRID_SIZE = 6;
-const CELL_SIZE = 50;
 const MIN_PIECES = 6;
 const MAX_PIECES = 10;
 
@@ -11,6 +10,10 @@ let dragging = null; // { id, anchorOffset: {x, y}, ghostEl, fromGrid: bool }
 let lastTouchXY = null; // Store last touch position for touchend
 
 function randomInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+function getCellSize() {
+  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
+}
 
 // Seed-then-connect: start with 36 single-cell regions, merge until 6-10 remain, no region > 10 cells
 function generatePuzzle() {
@@ -132,10 +135,10 @@ function render() {
         const overlayCell = document.createElement('div');
         overlayCell.className = 'piece-overlay-cell';
         overlayCell.style.position = 'absolute';
-        overlayCell.style.left = `${x * CELL_SIZE}px`;
-        overlayCell.style.top = `${y * CELL_SIZE}px`;
-        overlayCell.style.width = `${CELL_SIZE}px`;
-        overlayCell.style.height = `${CELL_SIZE}px`;
+        overlayCell.style.left = `${x * getCellSize()}px`;
+        overlayCell.style.top = `${y * getCellSize()}px`;
+        overlayCell.style.width = `${getCellSize()}px`;
+        overlayCell.style.height = `${getCellSize()}px`;
         overlayCell.style.cursor = 'grab';
         overlayCell.style.background = 'rgba(0,0,0,0)';
         overlayCell.style.zIndex = 100;
@@ -186,8 +189,8 @@ function makePieceElement(piece, gridX, gridY) {
   const minY = Math.min(...piece.shape.map(s => s.y));
   const maxX = Math.max(...piece.shape.map(s => s.x));
   const maxY = Math.max(...piece.shape.map(s => s.y));
-  const width = (maxX - minX + 1) * CELL_SIZE;
-  const height = (maxY - minY + 1) * CELL_SIZE;
+  const width = (maxX - minX + 1) * getCellSize();
+  const height = (maxY - minY + 1) * getCellSize();
 
   const el = document.createElement('div');
   el.className = 'piece';
@@ -204,8 +207,8 @@ function makePieceElement(piece, gridX, gridY) {
   piece.shape.forEach(offset => {
     const cell = document.createElement('div');
     cell.className = 'piece-cell';
-    cell.style.left = `${(offset.x - minX) * CELL_SIZE}px`;
-    cell.style.top = `${(offset.y - minY) * CELL_SIZE}px`;
+    cell.style.left = `${(offset.x - minX) * getCellSize()}px`;
+    cell.style.top = `${(offset.y - minY) * getCellSize()}px`;
     el.appendChild(cell);
   });
   el.addEventListener('mousedown', e => startDrag(e, piece.id, gridX, gridY));
@@ -238,8 +241,8 @@ function startDrag(e, pieceId, gridX, gridY) {
     // Dragging from grid: mouse - anchor cell position
     const grid = document.getElementById('gameGrid');
     const gridRect = grid.getBoundingClientRect();
-    anchorOffset.x = clientX - (gridRect.left + gridX * CELL_SIZE);
-    anchorOffset.y = clientY - (gridRect.top + gridY * CELL_SIZE);
+    anchorOffset.x = clientX - (gridRect.left + gridX * getCellSize());
+    anchorOffset.y = clientY - (gridRect.top + gridY * getCellSize());
     // Remove piece from board immediately
     piecePositions[pieceId] = null;
     updateGridState();
@@ -298,8 +301,8 @@ function dragEnd(e) {
   const grid = document.getElementById('gameGrid');
   const gridRect = grid.getBoundingClientRect();
   // Snap anchor cell to nearest grid cell
-  const gx = Math.round((x - gridRect.left - dragging.anchorOffset.x) / CELL_SIZE);
-  const gy = Math.round((y - gridRect.top - dragging.anchorOffset.y) / CELL_SIZE);
+  const gx = Math.round((x - gridRect.left - dragging.anchorOffset.x) / getCellSize());
+  const gy = Math.round((y - gridRect.top - dragging.anchorOffset.y) / getCellSize());
   const piece = pieces.find(p => p.id === dragging.id);
   // Try to place on grid
   if (isValidPlacement(piece, gx, gy)) {
