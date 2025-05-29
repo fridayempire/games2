@@ -185,10 +185,9 @@ function getEventXY(e) {
 }
 
 function startDrag(e, pieceId, gridX, gridY) {
-  e.preventDefault();
-  // Remove any existing ghost or overlays
+  if (e.type === 'touchstart') e.preventDefault();
+  // Remove any existing ghost (but NOT overlays yet)
   document.querySelectorAll('.ghost-piece').forEach(el => el.remove());
-  document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
   const piece = pieces.find(p => p.id === pieceId);
   // Calculate anchor offset (mouse position relative to anchor cell)
   let {x: clientX, y: clientY} = getEventXY(e);
@@ -245,7 +244,7 @@ function dragEnd(e) {
   document.removeEventListener('touchend', dragEnd);
   if (!dragging) return;
   if (dragging.ghostEl) dragging.ghostEl.remove();
-  // Remove all overlays
+  // Remove all overlays (now, after drag is complete)
   document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
   let x, y;
   if (e.type === 'touchend' && lastTouchXY) {
