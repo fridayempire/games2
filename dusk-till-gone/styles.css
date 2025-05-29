@@ -1,0 +1,80 @@
+:root {
+  --cell-size: 50px;
+  --grid-size: 6;
+  --grid-gap: 2px;
+  --grid-color: #2c3e50;
+  --cell-color: #34495e;
+  --piece-color: #3498db;
+  --piece-drag: #e67e22;
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f6fa;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  padding: 30px 0;
+}
+h1 {
+  color: var(--grid-color);
+  margin: 0 0 10px 0;
+}
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-size), var(--cell-size));
+  grid-template-rows: repeat(var(--grid-size), var(--cell-size));
+  gap: var(--grid-gap);
+  background: var(--grid-color);
+  padding: var(--grid-gap);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  position: relative;
+}
+.grid-cell {
+  background: var(--cell-color);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.piece-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  background: var(--grid-color);
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 170px;
+  margin-top: 30px;
+}
+.piece {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.2s;
+}
+.piece.dragging {
+  opacity: 0.7;
+  z-index: 1000;
+  cursor: grabbing;
+}
+.piece-cell {
+  position: absolute;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  background: var(--piece-color);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.piece.dragging .piece-cell {
+  background: var(--piece-drag);
+} 

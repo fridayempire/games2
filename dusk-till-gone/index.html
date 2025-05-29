@@ -3,29 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dusk Til Gone</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Dusk Til Gone - Block Fit Puzzle</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main id="game-container">
-    <h1 class="title">Dusk Til Gone</h1>
-    <div id="window-frame">
-      <div id="window-glow"></div>
-      <div id="window-grid" aria-label="Gothic window grid" tabindex="0"></div>
-    </div>
-    <section id="piece-tray-container">
-      <div id="piece-tray" aria-label="Tray of wooden boards"></div>
-      <div id="tray-darkness-overlay" aria-hidden="true"></div>
-    </section>
-    <button id="restart-btn" class="restart-btn">Restart Puzzle</button>
-  </main>
-  <div id="win-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="win-title">
-    <div class="modal-content">
-      <h2 id="win-title">You Survived Until Sunset!</h2>
-      <div class="bat-animation" aria-hidden="true"></div>
-      <button id="close-modal">Close</button>
-    </div>
+  <div class="game-container">
+    <h1>Dusk Til Gone</h1>
+    <div class="grid-container" id="gameGrid"></div>
+    <div class="piece-tray" id="pieceTray"></div>
   </div>
-  <script src="script.js"></script>
+  <script src="game.js"></script>
 </body>
 </html> 
