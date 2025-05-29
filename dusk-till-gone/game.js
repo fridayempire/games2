@@ -298,10 +298,14 @@ function dragEnd(e) {
   document.removeEventListener('mouseup', dragEnd);
   document.removeEventListener('touchmove', dragMove);
   document.removeEventListener('touchend', dragEnd);
-  // Only end drag if all touches are lifted
-  if (e && e.type === 'touchend' && e.touches && e.touches.length > 0) {
-    // Still touching, don't end drag yet
-    return;
+  // Only end drag if all touches are lifted (robust for all browsers)
+  if (e && e.type === 'touchend') {
+    const touches = (typeof e.touches !== 'undefined') ? e.touches.length : 0;
+    console.log('dragEnd touchend', touches, e);
+    if (touches > 0) {
+      // Still touching, don't end drag yet
+      return;
+    }
   }
   if (!dragging) return;
   if (dragging.ghostEl) dragging.ghostEl.remove();
