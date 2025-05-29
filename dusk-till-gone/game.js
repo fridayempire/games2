@@ -92,6 +92,13 @@ function resetGame() {
   render();
 }
 
+function restartCurrentPuzzle() {
+  // Set all piece positions to null (all in tray)
+  Object.keys(piecePositions).forEach(pid => piecePositions[pid] = null);
+  updateGridState();
+  render();
+}
+
 function render() {
   // Remove any ghost piece
   document.querySelectorAll('.ghost-piece').forEach(el => el.remove());
@@ -117,29 +124,28 @@ function render() {
         const x = pos.x + offset.x;
         const y = pos.y + offset.y;
         const cell = grid.querySelector(`.grid-cell[data-x="${x}"][data-y="${y}"]`);
-        if (cell) cell.style.backgroundColor = 'var(--piece-color)';
+        if (cell) {
+          cell.style.background = "url('./images/wood_texture.png') center/cover";
+          cell.style.backgroundColor = 'var(--piece-color)'; // fallback if image missing
+        }
+        // Add overlay cell for drag
+        const overlayCell = document.createElement('div');
+        overlayCell.className = 'piece-overlay-cell';
+        overlayCell.style.position = 'absolute';
+        overlayCell.style.left = `${x * CELL_SIZE}px`;
+        overlayCell.style.top = `${y * CELL_SIZE}px`;
+        overlayCell.style.width = `${CELL_SIZE}px`;
+        overlayCell.style.height = `${CELL_SIZE}px`;
+        overlayCell.style.cursor = 'grab';
+        overlayCell.style.background = 'rgba(0,0,0,0)';
+        overlayCell.style.zIndex = 100;
+        overlayCell.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
+        overlayCell.addEventListener('touchstart', e => {
+          e.preventDefault();
+          startDrag(e, piece.id, pos.x, pos.y);
+        }, {passive: false});
+        grid.appendChild(overlayCell);
       });
-      // Compute bounding box for overlay
-      const minX = Math.min(...piece.shape.map(s => s.x));
-      const minY = Math.min(...piece.shape.map(s => s.y));
-      const maxX = Math.max(...piece.shape.map(s => s.x));
-      const maxY = Math.max(...piece.shape.map(s => s.y));
-      const overlay = document.createElement('div');
-      overlay.className = 'piece-overlay';
-      overlay.style.position = 'absolute';
-      overlay.style.left = `${grid.offsetLeft + (pos.x + minX)*CELL_SIZE}px`;
-      overlay.style.top = `${grid.offsetTop + (pos.y + minY)*CELL_SIZE}px`;
-      overlay.style.width = `${(maxX-minX+1)*CELL_SIZE}px`;
-      overlay.style.height = `${(maxY-minY+1)*CELL_SIZE}px`;
-      overlay.style.cursor = 'grab';
-      overlay.style.background = 'rgba(0,0,0,0)';
-      overlay.style.zIndex = 100;
-      overlay.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
-      overlay.addEventListener('touchstart', e => {
-        e.preventDefault(); // Prevent default touch behavior immediately
-        startDrag(e, piece.id, pos.x, pos.y);
-      }, {passive: false});
-      document.body.appendChild(overlay);
     }
   });
   // Tray
@@ -155,25 +161,56 @@ function render() {
   if (dragging && dragging.ghostEl) {
     document.body.appendChild(dragging.ghostEl);
   }
+
+  // Darkness overlay effect
+  const duskLayer = document.getElementById('duskLayer');
+  if (duskLayer) {
+    const total = pieces.length;
+    const placed = Object.values(piecePositions).filter(pos => pos).length;
+    let opacity = 0;
+    if (placed === 0) {
+      opacity = 0;
+    } else if (placed === 1) {
+      opacity = 0.5;
+    } else {
+      let t2 = (placed - 1) / (total - 1);
+      opacity = 0.5 + 0.49 * Math.pow(t2, 1.5);
+    }
+    duskLayer.style.opacity = opacity;
+  }
 }
 
 function makePieceElement(piece, gridX, gridY) {
+  // Calculate bounding box for the piece
+  const minX = Math.min(...piece.shape.map(s => s.x));
+  const minY = Math.min(...piece.shape.map(s => s.y));
+  const maxX = Math.max(...piece.shape.map(s => s.x));
+  const maxY = Math.max(...piece.shape.map(s => s.y));
+  const width = (maxX - minX + 1) * CELL_SIZE;
+  const height = (maxY - minY + 1) * CELL_SIZE;
+
   const el = document.createElement('div');
   el.className = 'piece';
   el.dataset.id = piece.id;
-  el.style.width = '150px';
-  el.style.height = '150px';
+  el.style.width = width + 'px';
+  el.style.height = height + 'px';
   el.style.position = 'relative';
+  el.style.display = 'inline-block';
+  el.style.minWidth = '0';
+  el.style.minHeight = '0';
+  el.style.margin = '0';
+  el.style.padding = '0';
+
   piece.shape.forEach(offset => {
     const cell = document.createElement('div');
     cell.className = 'piece-cell';
-    cell.style.left = `${offset.x * CELL_SIZE}px`;
-    cell.style.top = `${offset.y * CELL_SIZE}px`;
+    cell.style.left = `${(offset.x - minX) * CELL_SIZE}px`;
+    cell.style.top = `${(offset.y - minY) * CELL_SIZE}px`;
     el.appendChild(cell);
   });
   el.addEventListener('mousedown', e => startDrag(e, piece.id, gridX, gridY));
   el.addEventListener('touchstart', e => {
-    e.preventDefault(); // Prevent default touch behavior immediately
+    e.preventDefault();
     startDrag(e, piece.id, gridX, gridY);
   }, {passive: false});
   return el;

@@ -4,14 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dusk Til Gone - Block Fit Puzzle</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="game-container">
-    <h1>Dusk Til Gone</h1>
-    <div class="grid-container" id="gameGrid"></div>
+  <div id="duskLayer"></div>
+  <div class="game-container" id="game-container">
+    <button id="backBtn" title="Back" onclick="window.location.href='/index.html'">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><line x1="9" y1="12" x2="21" y2="12"/></svg>
+    </button>
+    <button id="restartBtn" title="Restart" onclick="restartCurrentPuzzle()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7l3 3"/><path d="M21 12a9 9 0 1 1-9-9"/></svg>
+    </button>
+    <div class="header-block">
+      <h1>🧛🏻‍♂️ Dusk Til Gone 🧛🏻‍♂️</h1>
+      <h2 class="subheader">🦇 Board up before the light breaks in 🪵</h2>
+    </div>
+    <div class="grid-container" id="gameGrid">
+      <img id="windowImage" src="./images/window_backdrop.png" alt="window" />
+    </div>
     <div class="piece-tray" id="pieceTray"></div>
   </div>
+  <footer class="footer">Made with 💜 by Friday Games</footer>
   <script src="game.js"></script>
 </body>
 </html> 
