@@ -119,19 +119,23 @@ function render() {
         const cell = grid.querySelector(`.grid-cell[data-x="${x}"][data-y="${y}"]`);
         if (cell) cell.style.backgroundColor = 'var(--piece-color)';
       });
-      // Render a transparent overlay for redragging
+      // Compute bounding box for overlay
+      const minX = Math.min(...piece.shape.map(s => s.x));
+      const minY = Math.min(...piece.shape.map(s => s.y));
+      const maxX = Math.max(...piece.shape.map(s => s.x));
+      const maxY = Math.max(...piece.shape.map(s => s.y));
       const overlay = document.createElement('div');
       overlay.className = 'piece-overlay';
       overlay.style.position = 'absolute';
-      overlay.style.left = `${grid.offsetLeft + pos.x*CELL_SIZE}px`;
-      overlay.style.top = `${grid.offsetTop + pos.y*CELL_SIZE}px`;
-      overlay.style.width = `${(Math.max(...piece.shape.map(s=>s.x))+1)*CELL_SIZE}px`;
-      overlay.style.height = `${(Math.max(...piece.shape.map(s=>s.y))+1)*CELL_SIZE}px`;
+      overlay.style.left = `${grid.offsetLeft + (pos.x + minX)*CELL_SIZE}px`;
+      overlay.style.top = `${grid.offsetTop + (pos.y + minY)*CELL_SIZE}px`;
+      overlay.style.width = `${(maxX-minX+1)*CELL_SIZE}px`;
+      overlay.style.height = `${(maxY-minY+1)*CELL_SIZE}px`;
       overlay.style.cursor = 'grab';
       overlay.style.background = 'rgba(0,0,0,0)';
+      overlay.style.zIndex = 100;
       overlay.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
       overlay.addEventListener('touchstart', e => startDrag(e, piece.id, pos.x, pos.y), {passive: false});
-      overlay.style.zIndex = 20;
       document.body.appendChild(overlay);
     }
   });
