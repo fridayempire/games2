@@ -85,7 +85,7 @@ body {
   height: 40px;
   background: linear-gradient(145deg, var(--cell-light) 80%, var(--cell-dark) 100%);
   border-radius: 8px;
-  box-shadow: var(--cell-glow);
+  box-shadow: none;
   border: 2px solid #ffe06688;
   transition: background 0.3s, box-shadow 0.3s;
   position: relative;
@@ -94,7 +94,7 @@ body {
 }
 .grid-cell.covered {
   background: var(--piece-jagged);
-  box-shadow: 0 2px 8px var(--piece-shadow);
+  box-shadow: none;
   border: 2px solid #a97c50;
 }
 
@@ -105,47 +105,43 @@ body {
   min-height: 80px;
 }
 #piece-tray {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-  align-items: flex-end;
-  min-height: 60px;
-  padding: 12px 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  justify-items: center;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
   position: relative;
   z-index: 2;
 }
 .piece {
-  position: absolute;
-  left: 0; top: 0;
-  display: grid;
-  grid-template-columns: repeat(6, 28px);
-  grid-template-rows: repeat(6, 28px);
-  gap: 2px;
-  pointer-events: auto;
-  cursor: grab;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px #0005;
-  transition: box-shadow 0.2s, transform 0.2s, opacity 0.2s;
-  z-index: 10;
-  opacity: 1;
+  position: relative;
+  width: fit-content;
+  height: fit-content;
+  display: block;
+}
+.piece[style*='absolute'] {
+  /* Only overlays on the grid should be absolute */
+  position: absolute !important;
 }
 .piece.dragging {
   opacity: 0.7;
-  box-shadow: 0 8px 32px #000a, 0 0 16px #ffe06688;
+  box-shadow: none;
   cursor: grabbing;
   transform: scale(1.06) rotate(-2deg);
 }
 .piece-cell {
-  width: 28px;
-  height: 28px;
+  position: absolute;
   background: var(--piece-jagged);
-  border-radius: 6px 10px 8px 7px / 8px 6px 10px 7px;
-  box-shadow: 0 1px 4px var(--piece-shadow);
-  border: 2px solid #a97c50;
-  position: relative;
-  transition: background 0.2s, border 0.2s;
+  border-radius: 6px;
+  pointer-events: auto;
+  box-sizing: border-box;
 }
+.piece-cell.border-top { border-top: 4px solid #3e2c1c; }
+.piece-cell.border-right { border-right: 4px solid #3e2c1c; }
+.piece-cell.border-bottom { border-bottom: 4px solid #3e2c1c; }
+.piece-cell.border-left { border-left: 4px solid #3e2c1c; }
 .piece-cell.ghost {
   opacity: 0.4;
   background: var(--win);

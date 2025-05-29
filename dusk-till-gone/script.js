@@ -102,7 +102,11 @@ const closeModalBtn = document.getElementById('close-modal');
 const restartBtn = document.getElementById('restart-btn');
 
 const GRID_SIZE = 6;
-let puzzle, placed, trayPieces, dragging, dragPieceIdx, dragOffset, dragOrigin, dragElem, isWin;
+let puzzle, placed, trayPieces, dragging, dragPieceIdx, dragOffset, dragOrigin, dragElem, isWin, dragElemOffset;
+
+// --- Board State ---
+// boardState[y][x] = null (empty) or piece index
+let boardState;
 
 function setupGame() {
   // Generate puzzle
@@ -115,6 +119,7 @@ function setupGame() {
   dragOffset = null;
   dragOrigin = null;
   dragElem = null;
+  dragElemOffset = null;
   isWin = false;
   renderGrid();
   renderTray();
@@ -122,9 +127,18 @@ function setupGame() {
   winModal.classList.add('hidden');
   gridEl.style.pointerEvents = '';
   trayEl.style.pointerEvents = '';
+  boardState = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
 }
 
 // --- Grid Rendering ---
+function getPieceBoundingBox(cells) {
+  let minX = Math.min(...cells.map(c => c.x));
+  let minY = Math.min(...cells.map(c => c.y));
+  let maxX = Math.max(...cells.map(c => c.x));
+  let maxY = Math.max(...cells.map(c => c.y));
+  return { minX, minY, maxX, maxY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
 function renderGrid() {
   gridEl.innerHTML = '';
   for (let y = 0; y < GRID_SIZE; y++) {
@@ -133,113 +147,178 @@ function renderGrid() {
       cell.className = 'grid-cell';
       cell.dataset.x = x;
       cell.dataset.y = y;
-      // Check if covered
-      let covered = false;
+      // Check if covered and by which piece
+      let coveredIdx = null;
       for (let i=0; i<placed.length; i++) {
         if (placed[i]) {
           for (const c of puzzle.pieces[i].cells) {
-            if (x === placed[i].x + c.x && y === placed[i].y + c.y) covered = true;
+            if (x === placed[i].x + c.x && y === placed[i].y + c.y) coveredIdx = i;
           }
         }
       }
-      if (covered) cell.classList.add('covered');
+      if (coveredIdx !== null) cell.classList.add('covered');
       gridEl.appendChild(cell);
+    }
+  }
+  // Render placed pieces as draggable overlays
+  const cellSize = gridEl.offsetWidth / GRID_SIZE;
+  for (let i = 0; i < placed.length; i++) {
+    if (placed[i]) {
+      const piece = puzzle.pieces[i];
+      const bbox = getPieceBoundingBox(piece.cells);
+      const pieceEl = createPieceElement(
+        piece,
+        i,
+        true,
+        placed[i].x + bbox.minX,
+        placed[i].y + bbox.minY,
+        bbox,
+        cellSize
+      );
+      gridEl.appendChild(pieceEl);
     }
   }
 }
 
-// --- Tray Rendering ---
-function renderTray() {
-  trayEl.innerHTML = '';
-  // Place pieces in a row, spaced out
-  let trayRect = trayEl.getBoundingClientRect();
-  let pieceW = 6*28+5*2; // 6 cells + 5 gaps
-  let pieceH = 6*28+5*2;
-  let margin = 16;
-  let x = margin;
-  let y = 8;
-  trayPieces.forEach((idx, i) => {
-    const piece = puzzle.pieces[idx];
-    const pieceEl = createPieceElement(piece, idx);
-    pieceEl.style.left = x + 'px';
-    pieceEl.style.top = y + 'px';
-    pieceEl.style.position = 'absolute';
-    pieceEl.setAttribute('tabindex', 0);
-    trayEl.appendChild(pieceEl);
-    x += pieceW + margin;
-  });
-}
-function createPieceElement(piece, idx) {
+function createPieceElement(piece, idx, isPlaced = false, gridX = 0, gridY = 0, bbox = null, cellSizeOverride = null) {
+  if (!bbox) bbox = getPieceBoundingBox(piece.cells);
   const pieceEl = document.createElement('div');
   pieceEl.className = 'piece';
   pieceEl.dataset.idx = idx;
-  pieceEl.style.width = '180px';
-  pieceEl.style.height = '180px';
   pieceEl.style.zIndex = 2;
   pieceEl.draggable = false;
   pieceEl.ariaLabel = 'Wooden board';
-  // Render piece cells
+  pieceEl.style.position = 'relative';
+  // Use the board's cell size for everything
+  const cellSize = cellSizeOverride || (gridEl.offsetWidth / GRID_SIZE);
   for (const c of piece.cells) {
     const cell = document.createElement('div');
     cell.className = 'piece-cell';
-    cell.style.gridColumn = c.x+1;
-    cell.style.gridRow = c.y+1;
-    cell.style.background = 'var(--piece-jagged)';
+    cell.style.left = `${(c.x - bbox.minX) * cellSize}px`;
+    cell.style.top = `${(c.y - bbox.minY) * cellSize}px`;
+    cell.style.width = `${cellSize}px`;
+    cell.style.height = `${cellSize}px`;
     pieceEl.appendChild(cell);
   }
-  // Pointer events
-  pieceEl.addEventListener('pointerdown', e => startDrag(e, idx));
+  pieceEl.addEventListener('pointerdown', e => startDrag(e, idx, isPlaced, bbox));
+  pieceEl.style.width = `${(bbox.width) * cellSize}px`;
+  pieceEl.style.height = `${(bbox.height) * cellSize}px`;
+  if (isPlaced) {
+    pieceEl.style.position = 'absolute';
+    pieceEl.style.left = (gridX * cellSize) + 'px';
+    pieceEl.style.top = (gridY * cellSize) + 'px';
+    pieceEl.style.pointerEvents = 'auto';
+    pieceEl.style.zIndex = 20;
+  }
   return pieceEl;
 }
 
+// --- Piece Placement/Removal ---
+function placePieceOnBoard(pieceIdx, gridX, gridY) {
+  const piece = puzzle.pieces[pieceIdx];
+  for (const c of piece.cells) {
+    const gx = gridX + c.x;
+    const gy = gridY + c.y;
+    boardState[gy][gx] = pieceIdx;
+  }
+  placed[pieceIdx] = { x: gridX, y: gridY };
+}
+function removePieceFromBoard(pieceIdx) {
+  for (let y = 0; y < GRID_SIZE; y++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      if (boardState[y][x] === pieceIdx) boardState[y][x] = null;
+    }
+  }
+  placed[pieceIdx] = null;
+}
+function canPlacePiece(pieceIdx, gridX, gridY) {
+  const piece = puzzle.pieces[pieceIdx];
+  for (const c of piece.cells) {
+    const gx = gridX + c.x;
+    const gy = gridY + c.y;
+    if (
+      gx < 0 || gx >= GRID_SIZE ||
+      gy < 0 || gy >= GRID_SIZE ||
+      boardState[gy][gx] !== null
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // --- Drag and Drop (Pointer Events, Absolute Position) ---
-function startDrag(e, idx) {
+function startDrag(e, idx, isPlaced = false, bbox = null) {
   if (isWin) return;
   e.preventDefault();
   dragging = true;
   dragPieceIdx = idx;
   dragOrigin = getPointerPos(e);
   dragOffset = getPointerPos(e);
-  // Find the piece element
-  dragElem = Array.from(trayEl.children).find(el => +el.dataset.idx === idx);
+  dragElem = null;
+  dragElemOffset = null;
+  if (isPlaced) {
+    removePieceFromBoard(idx);
+    renderGrid();
+    renderTray();
+    updateTrayDarkness();
+  }
+  dragElem = (isPlaced
+    ? Array.from(gridEl.children).find(el => el.classList.contains('piece') && +el.dataset.idx === idx)
+    : Array.from(trayEl.children).find(el => +el.dataset.idx === idx));
   dragElem.classList.add('dragging');
   dragElem.setPointerCapture(e.pointerId);
   dragElem.addEventListener('pointermove', onDragMove);
   dragElem.addEventListener('pointerup', onDragEnd);
 }
+
 function onDragMove(e) {
   if (!dragging || !dragElem) return;
-  const pos = getPointerPos(e);
-  let dx = pos.x - dragOrigin.x;
-  let dy = pos.y - dragOrigin.y;
-  dragElem.style.transform = `translate(${dx}px, ${dy}px)`;
+  // Use requestAnimationFrame for smoother drag
+  if (dragElem._raf) cancelAnimationFrame(dragElem._raf);
+  dragElem._raf = requestAnimationFrame(() => {
+    const pos = getPointerPos(e);
+    let dx = pos.x - dragOrigin.x;
+    let dy = pos.y - dragOrigin.y;
+    dragElem.style.transform = `translate(${dx}px, ${dy}px)`;
+  });
 }
+
 function onDragEnd(e) {
   if (!dragging || !dragElem) return;
   dragElem.classList.remove('dragging');
   dragElem.releasePointerCapture(e.pointerId);
   dragElem.removeEventListener('pointermove', onDragMove);
   dragElem.removeEventListener('pointerup', onDragEnd);
-  // Snap to grid if valid
   const gridRect = gridEl.getBoundingClientRect();
   const pos = getPointerPos(e);
-  let gridX = Math.floor((pos.x - gridRect.left) / (gridRect.width / GRID_SIZE));
-  let gridY = Math.floor((pos.y - gridRect.top) / (gridRect.height / GRID_SIZE));
-  if (canPlace(dragPieceIdx, gridX, gridY)) {
-    placed[dragPieceIdx] = {x: gridX, y: gridY};
+  const cellSize = gridEl.offsetWidth / GRID_SIZE;
+  let snapped = snapToGrid(pos.x, pos.y, gridRect.left, gridRect.top, cellSize);
+  let gridX = snapped.x;
+  let gridY = snapped.y;
+  if (canPlacePiece(dragPieceIdx, gridX, gridY)) {
+    placePieceOnBoard(dragPieceIdx, gridX, gridY);
     trayPieces = trayPieces.filter(i => i !== dragPieceIdx);
     renderTray();
     renderGrid();
     updateTrayDarkness();
     checkWin();
   } else {
-    // Return to tray
+    trayPieces = trayPieces.includes(dragPieceIdx)
+      ? trayPieces
+      : [...trayPieces, dragPieceIdx];
+    placed[dragPieceIdx] = null;
+    renderTray();
+    renderGrid();
+    updateTrayDarkness();
     dragElem.style.transform = '';
   }
   dragging = false;
   dragPieceIdx = null;
   dragElem = null;
+  dragElemOffset = null;
 }
+
 function getPointerPos(e) {
   if (e.touches && e.touches.length) {
     return {x: e.touches[0].clientX, y: e.touches[0].clientY};
@@ -247,21 +326,18 @@ function getPointerPos(e) {
     return {x: e.clientX, y: e.clientY};
   }
 }
-function canPlace(idx, x, y) {
-  if (x == null || y == null) return false;
-  for (const c of puzzle.pieces[idx].cells) {
-    let gx = x + c.x, gy = y + c.y;
-    if (gx < 0 || gx >= GRID_SIZE || gy < 0 || gy >= GRID_SIZE) return false;
-    // Overlap check
-    for (let i=0; i<placed.length; i++) {
-      if (placed[i]) {
-        for (const pc of puzzle.pieces[i].cells) {
-          if (gx === placed[i].x + pc.x && gy === placed[i].y + pc.y) return false;
-        }
-      }
-    }
-  }
-  return true;
+
+// --- Tray Rendering ---
+function renderTray() {
+  trayEl.innerHTML = '';
+  const cellSize = gridEl.offsetWidth / GRID_SIZE;
+  trayPieces.forEach((idx, i) => {
+    const piece = puzzle.pieces[idx];
+    const bbox = getPieceBoundingBox(piece.cells);
+    const pieceEl = createPieceElement(piece, idx, false, 0, 0, bbox, cellSize);
+    pieceEl.setAttribute('tabindex', 0);
+    trayEl.appendChild(pieceEl);
+  });
 }
 
 // --- Tray Darkness Overlay ---
@@ -281,14 +357,15 @@ function updateTrayDarkness() {
 
 // --- Win Condition ---
 function checkWin() {
-  let covered = 0;
-  for (let i=0; i<placed.length; i++) if (placed[i]) covered += puzzle.pieces[i].cells.length;
-  if (covered === GRID_SIZE*GRID_SIZE) {
-    winModal.classList.remove('hidden');
-    isWin = true;
-    gridEl.style.pointerEvents = 'none';
-    trayEl.style.pointerEvents = 'none';
+  for (let y = 0; y < GRID_SIZE; y++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      if (boardState[y][x] === null) return;
+    }
   }
+  winModal.classList.remove('hidden');
+  isWin = true;
+  gridEl.style.pointerEvents = 'none';
+  trayEl.style.pointerEvents = 'none';
 }
 
 // --- Restart ---
@@ -297,3 +374,9 @@ closeModalBtn.addEventListener('click', () => winModal.classList.add('hidden'));
 
 // --- Init ---
 setupGame(); 
+
+function snapToGrid(pixelX, pixelY, gridOffsetX, gridOffsetY, cellSize) {
+  const x = Math.floor((pixelX - gridOffsetX) / cellSize);
+  const y = Math.floor((pixelY - gridOffsetY) / cellSize);
+  return { x, y };
+} 

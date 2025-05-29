@@ -1,5 +1,3 @@
-import scarabImage from '../assets/scarab.jpg';
-
 export const dailyPuzzles = [
   {
     id: 1,
