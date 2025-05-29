@@ -269,6 +269,13 @@ function startDrag(e, pieceId, gridX, gridY) {
   };
   render();
   document.body.appendChild(ghost);
+  // Force reflow for iOS and ensure ghost is positioned under finger
+  void ghost.offsetWidth;
+  if (e.touches && e.touches.length > 0) {
+    let {x, y} = getEventXY(e);
+    ghost.style.left = `${x - anchorOffset.x}px`;
+    ghost.style.top = `${y - anchorOffset.y}px`;
+  }
   document.addEventListener('mousemove', dragMove);
   document.addEventListener('mouseup', dragEnd);
   document.addEventListener('touchmove', dragMove, {passive: false});
@@ -283,6 +290,7 @@ function dragMove(e) {
   lastTouchXY = {x, y}; // Store last touch position
   dragging.ghostEl.style.left = `${x - dragging.anchorOffset.x}px`;
   dragging.ghostEl.style.top = `${y - dragging.anchorOffset.y}px`;
+  console.log('dragMove', x, y);
 }
 
 function dragEnd(e) {
