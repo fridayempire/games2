@@ -143,9 +143,52 @@ function render() {
         overlayCell.style.background = 'rgba(0,0,0,0)';
         overlayCell.style.zIndex = 100;
         overlayCell.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
-        overlayCell.addEventListener('touchstart', e => {
+        overlayCell.addEventListener('touchstart', function(e) {
           e.preventDefault();
+          // Touch drag logic: set up drag state and ghost just like mouse
+          if (dragging) return;
           startDrag(e, piece.id, pos.x, pos.y);
+          // Attach touchmove/touchend only for this drag
+          function touchMoveHandler(ev) {
+            if (!dragging || !dragging.ghostEl) return;
+            ev.preventDefault();
+            let {x, y} = getEventXY(ev);
+            lastTouchXY = {x, y};
+            dragging.ghostEl.style.left = `${x - dragging.anchorOffset.x}px`;
+            dragging.ghostEl.style.top = `${y - dragging.anchorOffset.y}px`;
+          }
+          function touchEndHandler(ev) {
+            document.removeEventListener('touchmove', touchMoveHandler);
+            document.removeEventListener('touchend', touchEndHandler);
+            if (!dragging) return;
+            if (dragging.ghostEl) dragging.ghostEl.remove();
+            document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
+            let x, y;
+            if (ev && ev.type === 'touchend' && lastTouchXY) {
+              x = lastTouchXY.x;
+              y = lastTouchXY.y;
+              ev.preventDefault();
+            } else if (ev) {
+              ({x, y} = getEventXY(ev));
+            }
+            const grid = document.getElementById('gameGrid');
+            const gridRect = grid.getBoundingClientRect();
+            const gx = Math.round((x - gridRect.left - dragging.anchorOffset.x) / getCellSize());
+            const gy = Math.round((y - gridRect.top - dragging.anchorOffset.y) / getCellSize());
+            const piece = pieces.find(p => p.id === dragging.id);
+            if (isValidPlacement(piece, gx, gy)) {
+              piecePositions[piece.id] = {x: gx, y: gy};
+            } else {
+              piecePositions[piece.id] = null;
+            }
+            updateGridState();
+            dragging = null;
+            lastTouchXY = null;
+            render();
+            checkWin();
+          }
+          document.addEventListener('touchmove', touchMoveHandler, {passive: false});
+          document.addEventListener('touchend', touchEndHandler);
         }, {passive: false});
         grid.appendChild(overlayCell);
       });
@@ -212,9 +255,52 @@ function makePieceElement(piece, gridX, gridY) {
     el.appendChild(cell);
   });
   el.addEventListener('mousedown', e => startDrag(e, piece.id, gridX, gridY));
-  el.addEventListener('touchstart', e => {
+  el.addEventListener('touchstart', function(e) {
     e.preventDefault();
+    // Touch drag logic: set up drag state and ghost just like mouse
+    if (dragging) return;
     startDrag(e, piece.id, gridX, gridY);
+    // Attach touchmove/touchend only for this drag
+    function touchMoveHandler(ev) {
+      if (!dragging || !dragging.ghostEl) return;
+      ev.preventDefault();
+      let {x, y} = getEventXY(ev);
+      lastTouchXY = {x, y};
+      dragging.ghostEl.style.left = `${x - dragging.anchorOffset.x}px`;
+      dragging.ghostEl.style.top = `${y - dragging.anchorOffset.y}px`;
+    }
+    function touchEndHandler(ev) {
+      document.removeEventListener('touchmove', touchMoveHandler);
+      document.removeEventListener('touchend', touchEndHandler);
+      if (!dragging) return;
+      if (dragging.ghostEl) dragging.ghostEl.remove();
+      document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
+      let x, y;
+      if (ev && ev.type === 'touchend' && lastTouchXY) {
+        x = lastTouchXY.x;
+        y = lastTouchXY.y;
+        ev.preventDefault();
+      } else if (ev) {
+        ({x, y} = getEventXY(ev));
+      }
+      const grid = document.getElementById('gameGrid');
+      const gridRect = grid.getBoundingClientRect();
+      const gx = Math.round((x - gridRect.left - dragging.anchorOffset.x) / getCellSize());
+      const gy = Math.round((y - gridRect.top - dragging.anchorOffset.y) / getCellSize());
+      const piece = pieces.find(p => p.id === dragging.id);
+      if (isValidPlacement(piece, gx, gy)) {
+        piecePositions[piece.id] = {x: gx, y: gy};
+      } else {
+        piecePositions[piece.id] = null;
+      }
+      updateGridState();
+      dragging = null;
+      lastTouchXY = null;
+      render();
+      checkWin();
+    }
+    document.addEventListener('touchmove', touchMoveHandler, {passive: false});
+    document.addEventListener('touchend', touchEndHandler);
   }, {passive: false});
   return el;
 }
