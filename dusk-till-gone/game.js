@@ -8,6 +8,7 @@ let gridState = [];
 let pieces = [];
 let piecePositions = {}; // { pieceId: {x, y} | null (in tray) }
 let dragging = null; // { id, anchorOffset: {x, y}, ghostEl, fromGrid: bool }
+let lastTouchXY = null; // Store last touch position for touchend
 
 function randomInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 
@@ -171,6 +172,9 @@ function makePieceElement(piece, gridX, gridY) {
 function getEventXY(e) {
   if (e.touches && e.touches.length > 0) {
     return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    // For touchend
+    return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
   } else {
     return { x: e.clientX, y: e.clientY };
   }
@@ -225,6 +229,7 @@ function dragMove(e) {
   if (!dragging || !dragging.ghostEl) return;
   if (e.touches && e.touches.length > 0) e.preventDefault();
   let {x, y} = getEventXY(e);
+  lastTouchXY = {x, y}; // Store last touch position
   dragging.ghostEl.style.left = `${x - dragging.anchorOffset.x}px`;
   dragging.ghostEl.style.top = `${y - dragging.anchorOffset.y}px`;
 }
@@ -238,7 +243,13 @@ function dragEnd(e) {
   if (dragging.ghostEl) dragging.ghostEl.remove();
   // Remove all overlays
   document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
-  let {x, y} = getEventXY(e);
+  let x, y;
+  if (e.type === 'touchend' && lastTouchXY) {
+    x = lastTouchXY.x;
+    y = lastTouchXY.y;
+  } else {
+    ({x, y} = getEventXY(e));
+  }
   const grid = document.getElementById('gameGrid');
   const gridRect = grid.getBoundingClientRect();
   // Snap anchor cell to nearest grid cell
@@ -253,6 +264,7 @@ function dragEnd(e) {
   }
   updateGridState();
   dragging = null;
+  lastTouchXY = null;
   render();
   checkWin();
 }
