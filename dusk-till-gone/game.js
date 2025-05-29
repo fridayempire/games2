@@ -135,7 +135,10 @@ function render() {
       overlay.style.background = 'rgba(0,0,0,0)';
       overlay.style.zIndex = 100;
       overlay.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
-      overlay.addEventListener('touchstart', e => startDrag(e, piece.id, pos.x, pos.y), {passive: false});
+      overlay.addEventListener('touchstart', e => {
+        e.preventDefault(); // Prevent default touch behavior immediately
+        startDrag(e, piece.id, pos.x, pos.y);
+      }, {passive: false});
       document.body.appendChild(overlay);
     }
   });
@@ -169,7 +172,10 @@ function makePieceElement(piece, gridX, gridY) {
     el.appendChild(cell);
   });
   el.addEventListener('mousedown', e => startDrag(e, piece.id, gridX, gridY));
-  el.addEventListener('touchstart', e => startDrag(e, piece.id, gridX, gridY), {passive: false});
+  el.addEventListener('touchstart', e => {
+    e.preventDefault(); // Prevent default touch behavior immediately
+    startDrag(e, piece.id, gridX, gridY);
+  }, {passive: false});
   return el;
 }
 
@@ -185,7 +191,6 @@ function getEventXY(e) {
 }
 
 function startDrag(e, pieceId, gridX, gridY) {
-  if (e.type === 'touchstart') e.preventDefault();
   // Remove any existing ghost (but NOT overlays yet)
   document.querySelectorAll('.ghost-piece').forEach(el => el.remove());
   const piece = pieces.find(p => p.id === pieceId);
