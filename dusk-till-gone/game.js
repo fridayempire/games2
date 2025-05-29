@@ -217,9 +217,11 @@ function startDrag(e, pieceId, gridX, gridY) {
   const ghost = makePieceElement(piece);
   ghost.classList.add('ghost-piece', 'dragging');
   ghost.style.position = 'fixed';
-  ghost.style.pointerEvents = 'none';
+  ghost.style.pointerEvents = 'auto';
   ghost.style.left = `${clientX - anchorOffset.x}px`;
   ghost.style.top = `${clientY - anchorOffset.y}px`;
+  ghost.style.touchAction = 'none';
+  ghost.style.zIndex = '1000';
   dragging = {
     id: pieceId,
     anchorOffset,
@@ -227,15 +229,20 @@ function startDrag(e, pieceId, gridX, gridY) {
     ghostEl: ghost
   };
   document.body.appendChild(ghost);
+  
+  // Add touch event listeners to the ghost piece itself
+  ghost.addEventListener('touchmove', dragMove, {passive: false});
+  ghost.addEventListener('touchend', dragEnd);
+  ghost.addEventListener('touchcancel', dragEnd);
+  
+  // Keep mouse event listeners on document
   document.addEventListener('mousemove', dragMove);
   document.addEventListener('mouseup', dragEnd);
-  document.addEventListener('touchmove', dragMove, {passive: false});
-  document.addEventListener('touchend', dragEnd);
 }
 
 function dragMove(e) {
   if (!dragging || !dragging.ghostEl) return;
-  if (e.touches && e.touches.length > 0) e.preventDefault();
+  e.preventDefault(); // Always prevent default for touch events
   let {x, y} = getEventXY(e);
   lastTouchXY = {x, y}; // Store last touch position
   dragging.ghostEl.style.left = `${x - dragging.anchorOffset.x}px`;
@@ -243,14 +250,21 @@ function dragMove(e) {
 }
 
 function dragEnd(e) {
+  if (!dragging) return;
+  
+  // Remove all event listeners
+  if (dragging.ghostEl) {
+    dragging.ghostEl.removeEventListener('touchmove', dragMove);
+    dragging.ghostEl.removeEventListener('touchend', dragEnd);
+    dragging.ghostEl.removeEventListener('touchcancel', dragEnd);
+  }
   document.removeEventListener('mousemove', dragMove);
   document.removeEventListener('mouseup', dragEnd);
-  document.removeEventListener('touchmove', dragMove);
-  document.removeEventListener('touchend', dragEnd);
-  if (!dragging) return;
+  
   if (dragging.ghostEl) dragging.ghostEl.remove();
   // Remove all overlays (now, after drag is complete)
   document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
+  
   let x, y;
   if (e.type === 'touchend' && lastTouchXY) {
     x = lastTouchXY.x;
@@ -258,6 +272,7 @@ function dragEnd(e) {
   } else {
     ({x, y} = getEventXY(e));
   }
+  
   const grid = document.getElementById('gameGrid');
   const gridRect = grid.getBoundingClientRect();
   // Snap anchor cell to nearest grid cell
