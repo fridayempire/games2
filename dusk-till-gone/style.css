@@ -344,4 +344,166 @@ h1 {
   font-family: 'Crimson Text', serif;
   opacity: 0.85;
   padding: 0;
+}
+
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Add bat animation styles */
+.bat-animation {
+  position: absolute;
+  top: 50%;
+  left: -100px; /* Start off-screen to the left */
+  width: 180px;
+  height: auto;
+  z-index: 1000;
+  animation: flyAcross 3s ease-in-out forwards;
+}
+
+@keyframes flyAcross {
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  50% {
+    transform: translateX(calc(50vw - 50px)) translateY(-50px) scale(2);
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px)) translateY(0) scale(1);
+  }
+}
+
+/* WIN MODAL STYLES */
+.win-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(30, 20, 60, 0.92);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInWin 0.7s cubic-bezier(.4,2,.6,1);
+}
+@keyframes fadeInWin {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.win-modal-content {
+  background: linear-gradient(135deg, #2d1a4d 60%, #b7aaff 100%);
+  border-radius: 2.2em;
+  box-shadow: 0 8px 40px 0 #0008, 0 2px 12px 0 #b7aaff44;
+  padding: 2.5em 2em 2em 2em;
+  text-align: center;
+  color: #fff;
+  max-width: 90vw;
+  width: 370px;
+  position: relative;
+  font-family: 'Crimson Text', serif;
+  animation: popInWin 0.7s cubic-bezier(.4,2,.6,1);
+}
+@keyframes popInWin {
+  0% { transform: scale(0.7); opacity: 0; }
+  80% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.win-bat-emoji {
+  font-size: 2.5em;
+  margin-bottom: 0.2em;
+  animation: batWiggle 1.2s infinite alternate cubic-bezier(.4,2,.6,1);
+}
+@keyframes batWiggle {
+  0% { transform: rotate(-10deg) scale(1.1); }
+  100% { transform: rotate(10deg) scale(1.2); }
+}
+.win-title {
+  font-size: 2em;
+  font-family: 'Crimson Text', serif;
+  color: #ffe066;
+  margin: 0.2em 0 0.5em 0;
+  text-shadow: 0 2px 12px #000a, 0 0 8px #b7aaff99;
+  letter-spacing: 0.04em;
+}
+.win-catchphrase {
+  font-size: 1.1em;
+  color: #fff;
+  margin-bottom: 1.2em;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  text-shadow: 0 1px 6px #0006;
+}
+.win-bat-img {
+  width: 120px;
+  margin: 0.5em auto 1.2em auto;
+  display: block;
+  filter: drop-shadow(0 4px 16px #0008) brightness(1.15);
+  animation: batPop 1.2s cubic-bezier(.4,2,.6,1);
+}
+@keyframes batPop {
+  0% { transform: scale(0.2) rotate(-30deg); opacity: 0; }
+  80% { transform: scale(1.15) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.win-share-btn {
+  background: linear-gradient(90deg, #ffe066 60%, #b7aaff 100%);
+  color: #2d1a4d;
+  font-size: 1.1em;
+  font-weight: bold;
+  border: none;
+  border-radius: 1.5em;
+  padding: 0.8em 2.2em;
+  margin: 0.5em 0 1.2em 0;
+  box-shadow: 0 2px 12px #0004;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  letter-spacing: 0.04em;
+  outline: none;
+  animation: popInWin 0.7s cubic-bezier(.4,2,.6,1);
+}
+.win-share-btn:hover, .win-share-btn:focus {
+  background: linear-gradient(90deg, #b7aaff 60%, #ffe066 100%);
+  color: #2d1a4d;
+  transform: scale(1.07);
+}
+.win-footer {
+  font-size: 0.95em;
+  color: #ffe066;
+  margin-top: 0.7em;
+  opacity: 0.8;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+}
+
+.win-modal-back {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  width: 40px;
+  height: 40px;
+  background: rgba(30, 30, 50, 0.85);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  color: #b7aaff;
+}
+.win-modal-back:hover, .win-modal-back:focus {
+  background: rgba(80, 60, 120, 0.95);
+  box-shadow: 0 4px 16px rgba(138,43,226,0.18);
+  color: #fff;
+  outline: none;
+  transform: scale(1.08) rotate(-20deg);
+}
+.win-modal-back svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(.4,2,.6,1);
+}
+.win-modal-back:active svg {
+  transform: translateX(-4px) scale(1.1);
 } 

@@ -25,6 +25,19 @@
     <div class="piece-tray" id="pieceTray"></div>
   </div>
   <footer class="footer">Made with 💜 by Friday Games</footer>
+  <div id="winModal" class="win-modal" style="display:none;">
+    <div class="win-modal-content">
+      <button id="winBackBtn" class="win-modal-back" title="Back to games" onclick="window.location.href='/index.html'">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><line x1="9" y1="12" x2="21" y2="12"/></svg>
+      </button>
+      <div class="win-bat-emoji">🦇</div>
+      <h2 class="win-title">You Boarded Up the Night! 🌙</h2>
+      <p class="win-catchphrase">The bats are safe, the dawn is held at bay!<br><span style="font-size:1.5em;">🧛🏻‍♂️🦇🪵</span></p>
+      <img src="./images/bat-cartoon.png" alt="Bat" class="win-bat-img" />
+      <button id="shareWinBtn" class="win-share-btn">Share your victory! 🎉</button>
+      <div class="win-footer">Made with <span style="color:#b7aaff;">🖤</span> by Friday Games</div>
+    </div>
+  </div>
   <script src="game.js"></script>
 </body>
 </html> 

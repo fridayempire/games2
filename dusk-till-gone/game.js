@@ -6,7 +6,7 @@ const MAX_PIECES = 10;
 let gridState = [];
 let pieces = [];
 let piecePositions = {}; // { pieceId: {x, y} | null (in tray) }
-let dragging = null; // { id, anchorOffset: {x, y}, ghostEl, fromGrid: bool }
+let dragging = null; // { id, anchorOffset: {x, y}, ghostEl, fromGrid: bool, pending: bool }
 let lastTouchXY = null; // Store last touch position for touchend
 
 function randomInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
@@ -155,7 +155,7 @@ function render() {
   const tray = document.getElementById('pieceTray');
   tray.innerHTML = '';
   pieces.forEach(piece => {
-    if (!piecePositions[piece.id]) {
+    if (!piecePositions[piece.id] && (!dragging || dragging.id !== piece.id)) {
       const el = makePieceElement(piece);
       tray.appendChild(el);
     }
@@ -237,23 +237,20 @@ function startDrag(e, pieceId, gridX, gridY) {
   // Calculate anchor offset (mouse position relative to anchor cell)
   let {x: clientX, y: clientY} = getEventXY(e);
   let anchorOffset = {x: 0, y: 0};
-  if (gridX !== undefined && gridY !== undefined) {
-    // Dragging from grid: mouse - anchor cell position
+  let fromGrid = gridX !== undefined && gridY !== undefined;
+  if (fromGrid) {
     const grid = document.getElementById('gameGrid');
     const gridRect = grid.getBoundingClientRect();
     anchorOffset.x = clientX - (gridRect.left + gridX * getCellSize());
     anchorOffset.y = clientY - (gridRect.top + gridY * getCellSize());
-    // Remove piece from board immediately
     piecePositions[pieceId] = null;
     updateGridState();
-    render();
   } else {
-    // Dragging from tray: mouse - top left of piece
     const trayRect = e.target.getBoundingClientRect();
     anchorOffset.x = clientX - trayRect.left;
     anchorOffset.y = clientY - trayRect.top;
   }
-  // Create ghost
+  // Set dragging before render in both cases
   const ghost = makePieceElement(piece);
   ghost.classList.add('ghost-piece', 'dragging');
   ghost.style.position = 'fixed';
@@ -263,14 +260,47 @@ function startDrag(e, pieceId, gridX, gridY) {
   dragging = {
     id: pieceId,
     anchorOffset,
-    fromGrid: gridX !== undefined && gridY !== undefined,
-    ghostEl: ghost
+    fromGrid,
+    ghostEl: ghost,
+    pending: false
   };
+  render();
   document.body.appendChild(ghost);
   document.addEventListener('mousemove', dragMove);
   document.addEventListener('mouseup', dragEnd);
   document.addEventListener('touchmove', dragMove, {passive: false});
   document.addEventListener('touchend', dragEnd);
+}
+
+function handleTouchMove(e) {
+  if (!dragging || !dragging.pending) return;
+  e.preventDefault();
+  let {x, y} = getEventXY(e);
+  lastTouchXY = {x, y};
+  // If touch moves, start actual drag
+  const piece = pieces.find(p => p.id === dragging.id);
+  const ghost = makePieceElement(piece);
+  ghost.classList.add('ghost-piece', 'dragging');
+  ghost.style.position = 'fixed';
+  ghost.style.pointerEvents = 'none';
+  ghost.style.left = `${x - dragging.anchorOffset.x}px`;
+  ghost.style.top = `${y - dragging.anchorOffset.y}px`;
+  dragging.ghostEl = ghost;
+  dragging.pending = false;
+  document.body.appendChild(ghost);
+  document.removeEventListener('touchmove', handleTouchMove);
+  document.removeEventListener('touchend', handleTouchEnd);
+  document.addEventListener('touchmove', dragMove, {passive: false});
+  document.addEventListener('touchend', dragEnd);
+}
+
+function handleTouchEnd(e) {
+  document.removeEventListener('touchmove', handleTouchMove);
+  document.removeEventListener('touchend', handleTouchEnd);
+  if (!dragging || !dragging.pending) return;
+  // If touch ends without moving, do nothing (wait for second touch)
+  dragging = null;
+  lastTouchXY = null;
 }
 
 function dragMove(e) {
@@ -346,7 +376,63 @@ function checkWin() {
   for (let y = 0; y < GRID_SIZE; y++)
     for (let x = 0; x < GRID_SIZE; x++)
       if (!gridState[y][x]) return;
-  setTimeout(() => alert('Congratulations! You solved Dusk Til Gone!'), 100);
+  setTimeout(() => showWinModal(), 100);
+}
+
+function showWinModal() {
+  const modal = document.getElementById('winModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    setTimeout(() => {
+      modal.querySelector('.win-modal-content').style.transform = 'scale(1)';
+    }, 10);
+    // Share button logic
+    const shareBtn = document.getElementById('shareWinBtn');
+    if (shareBtn) {
+      shareBtn.onclick = function() {
+        console.log('Share button clicked');
+        const shareText = `🦇 I just boarded up the night in Dusk Til Gone! 🌙🧛🏻‍♂️\n\nThe bats are safe, the dawn is held at bay!\n\nPlay now: https://friday-games.com`;
+        const shareTextSMS = "🦇 I just boarded up the night in Dusk Til Gone! 🌙🧛🏻‍♂️ The bats are safe, the dawn is held at bay! Play now: https://friday-games.com";
+        const shareUrl = 'https://friday-games.com';
+        const smsUrl = `sms:?body=${encodeURIComponent(shareTextSMS)}`;
+        const emailUrl = `mailto:?subject=${encodeURIComponent('Dusk Til Gone - Boarded up the night!')}&body=${encodeURIComponent(shareText)}`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+        if (navigator.share) {
+          navigator.share({
+            title: 'Dusk Til Gone',
+            text: shareText,
+            url: shareUrl
+          });
+        } else {
+          // Always remove any old menu before creating a new one
+          let oldMenu = document.getElementById('customShareMenu');
+          if (oldMenu) oldMenu.remove();
+          let menu = document.createElement('div');
+          menu.id = 'customShareMenu';
+          menu.style.position = 'fixed';
+          menu.style.left = '0';
+          menu.style.right = '0';
+          menu.style.bottom = '0';
+          menu.style.background = 'rgba(30,20,60,0.98)';
+          menu.style.zIndex = '3000';
+          menu.style.padding = '1.5em 0 2em 0';
+          menu.style.display = 'flex';
+          menu.style.flexDirection = 'column';
+          menu.style.alignItems = 'center';
+          menu.style.gap = '1.2em';
+          menu.innerHTML = `
+            <div style="font-size:1.2em;color:#ffe066;font-family:'Crimson Text',serif;margin-bottom:0.5em;">Share your victory!</div>
+            <a href="${smsUrl}" class="win-share-link" style="color:#b7aaff;font-size:1.1em;text-decoration:none;" target="_blank">📱 Text Message</a>
+            <a href="${emailUrl}" class="win-share-link" style="color:#ffe066;font-size:1.1em;text-decoration:none;" target="_blank">✉️ Email</a>
+            <a href="${twitterUrl}" class="win-share-link" style="color:#1da1f2;font-size:1.1em;text-decoration:none;" target="_blank">🐦 Tweet</a>
+            <button id="closeShareMenuBtn" style="margin-top:1em;background:#2d1a4d;color:#fff;border:none;border-radius:1em;padding:0.5em 1.5em;font-size:1em;cursor:pointer;">Close</button>
+          `;
+          document.body.appendChild(menu);
+          document.getElementById('closeShareMenuBtn').onclick = () => menu.remove();
+        }
+      };
+    }
+  }
 }
 
 window.addEventListener('load', resetGame); 
