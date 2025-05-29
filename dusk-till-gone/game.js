@@ -233,6 +233,7 @@ function getEventXY(e) {
 function startDrag(e, pieceId, gridX, gridY) {
   // Remove any existing ghost (but NOT overlays yet)
   document.querySelectorAll('.ghost-piece').forEach(el => el.remove());
+  if (dragging) return; // Only one drag at a time
   const piece = pieces.find(p => p.id === pieceId);
   // Calculate anchor offset (mouse position relative to anchor cell)
   let {x: clientX, y: clientY} = getEventXY(e);
@@ -270,37 +271,7 @@ function startDrag(e, pieceId, gridX, gridY) {
   document.addEventListener('mouseup', dragEnd);
   document.addEventListener('touchmove', dragMove, {passive: false});
   document.addEventListener('touchend', dragEnd);
-}
-
-function handleTouchMove(e) {
-  if (!dragging || !dragging.pending) return;
-  e.preventDefault();
-  let {x, y} = getEventXY(e);
-  lastTouchXY = {x, y};
-  // If touch moves, start actual drag
-  const piece = pieces.find(p => p.id === dragging.id);
-  const ghost = makePieceElement(piece);
-  ghost.classList.add('ghost-piece', 'dragging');
-  ghost.style.position = 'fixed';
-  ghost.style.pointerEvents = 'none';
-  ghost.style.left = `${x - dragging.anchorOffset.x}px`;
-  ghost.style.top = `${y - dragging.anchorOffset.y}px`;
-  dragging.ghostEl = ghost;
-  dragging.pending = false;
-  document.body.appendChild(ghost);
-  document.removeEventListener('touchmove', handleTouchMove);
-  document.removeEventListener('touchend', handleTouchEnd);
-  document.addEventListener('touchmove', dragMove, {passive: false});
-  document.addEventListener('touchend', dragEnd);
-}
-
-function handleTouchEnd(e) {
-  document.removeEventListener('touchmove', handleTouchMove);
-  document.removeEventListener('touchend', handleTouchEnd);
-  if (!dragging || !dragging.pending) return;
-  // If touch ends without moving, do nothing (wait for second touch)
-  dragging = null;
-  lastTouchXY = null;
+  if (e.touches) e.preventDefault();
 }
 
 function dragMove(e) {
@@ -322,10 +293,11 @@ function dragEnd(e) {
   // Remove all overlays (now, after drag is complete)
   document.querySelectorAll('.piece-overlay').forEach(el => el.remove());
   let x, y;
-  if (e.type === 'touchend' && lastTouchXY) {
+  if (e && e.type === 'touchend' && lastTouchXY) {
     x = lastTouchXY.x;
     y = lastTouchXY.y;
-  } else {
+    e.preventDefault();
+  } else if (e) {
     ({x, y} = getEventXY(e));
   }
   const grid = document.getElementById('gameGrid');
