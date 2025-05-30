@@ -204,6 +204,7 @@ function makePieceElement(piece, gridX, gridY) {
   el.style.minHeight = '0';
   el.style.margin = '0';
   el.style.padding = '0';
+  el.style.touchAction = 'none';
 
   piece.shape.forEach(offset => {
     const cell = document.createElement('div');
@@ -216,8 +217,24 @@ function makePieceElement(piece, gridX, gridY) {
   // Add touch event listeners with proper configuration
   el.addEventListener('touchstart', function(e) {
     e.preventDefault();
+    e.stopPropagation();
     if (dragging) return;
+    
+    // Start the drag
     startDrag(e, piece.id, gridX, gridY);
+    
+    // Immediately simulate a touchmove event with the same coordinates
+    if (e.touches && e.touches.length > 0) {
+      const touch = e.touches[0];
+      const moveEvent = new TouchEvent('touchmove', {
+        bubbles: true,
+        cancelable: true,
+        touches: [touch],
+        targetTouches: [touch],
+        changedTouches: [touch]
+      });
+      document.dispatchEvent(moveEvent);
+    }
   }, { passive: false });
 
   el.addEventListener('mousedown', e => startDrag(e, piece.id, gridX, gridY));
@@ -237,6 +254,9 @@ function getEventXY(e) {
 function startDrag(e, pieceId, gridX, gridY) {
   if (dragging) return;
   
+  e.preventDefault();
+  e.stopPropagation();
+  
   const piece = pieces.find(p => p.id === pieceId);
   let {x: clientX, y: clientY} = getEventXY(e);
   
@@ -246,6 +266,7 @@ function startDrag(e, pieceId, gridX, gridY) {
   ghost.style.position = 'fixed';
   ghost.style.pointerEvents = 'none';
   ghost.style.zIndex = '1000';
+  ghost.style.touchAction = 'none';
   
   // Calculate anchor offset
   let anchorOffset = {x: 0, y: 0};
@@ -286,6 +307,7 @@ function startDrag(e, pieceId, gridX, gridY) {
   document.addEventListener('mouseup', dragEnd);
   document.addEventListener('touchmove', dragMove, { passive: false });
   document.addEventListener('touchend', dragEnd);
+  document.addEventListener('touchcancel', dragEnd);
   
   render();
 }
@@ -294,6 +316,8 @@ function dragMove(e) {
   if (!dragging || !dragging.ghostEl) return;
   
   e.preventDefault();
+  e.stopPropagation();
+  
   let {x, y} = getEventXY(e);
   lastTouchXY = {x, y};
   
@@ -310,6 +334,7 @@ function dragEnd(e) {
   document.removeEventListener('mouseup', dragEnd);
   document.removeEventListener('touchmove', dragMove);
   document.removeEventListener('touchend', dragEnd);
+  document.removeEventListener('touchcancel', dragEnd);
   
   // Get final position
   let x, y;
