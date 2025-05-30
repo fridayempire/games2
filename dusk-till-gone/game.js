@@ -147,7 +147,7 @@ function render() {
         overlayCell.style.webkitUserSelect = 'none';
         overlayCell.style.userSelect = 'none';
         
-        // Use the same touch handling as tray pieces
+        // Use the exact same touch handling as tray pieces
         overlayCell.addEventListener('touchstart', function(e) {
           e.preventDefault();
           if (dragging) return;
@@ -155,25 +155,19 @@ function render() {
           const touch = e.touches[0];
           const rect = overlayCell.getBoundingClientRect();
           
-          // Find the actual piece element
-          const pieceEl = document.querySelector(`.piece[data-id="${piece.id}"]`);
-          if (!pieceEl) return;
-          
-          // Calculate the offset from touch to piece top-left
-          const offsetX = touch.clientX - rect.left;
-          const offsetY = touch.clientY - rect.top;
-          
-          // Move the actual piece to fixed position
+          // Create a new piece element for dragging
+          const pieceEl = makePieceElement(piece);
           pieceEl.style.position = 'fixed';
           pieceEl.style.zIndex = '1000';
-          pieceEl.style.left = `${touch.clientX - offsetX}px`;
-          pieceEl.style.top = `${touch.clientY - offsetY}px`;
+          pieceEl.style.left = `${touch.clientX - rect.left}px`;
+          pieceEl.style.top = `${touch.clientY - rect.top}px`;
           pieceEl.classList.add('dragging');
+          document.body.appendChild(pieceEl);
           
           // Set dragging state
           dragging = {
             id: piece.id,
-            anchorOffset: { x: offsetX, y: offsetY },
+            anchorOffset: { x: rect.left, y: rect.top },
             fromGrid: true,
             ghostEl: pieceEl,
             pending: false
@@ -214,12 +208,8 @@ function render() {
               piecePositions[piece.id] = null;
             }
             
-            // Reset piece position
-            pieceEl.style.position = 'relative';
-            pieceEl.style.zIndex = '';
-            pieceEl.style.left = '';
-            pieceEl.style.top = '';
-            pieceEl.classList.remove('dragging');
+            // Remove the dragged piece
+            pieceEl.remove();
             
             updateGridState();
             dragging = null;
