@@ -631,4 +631,24 @@ function showWinModal() {
   }
 }
 
+function showHelpModal() {
+  const modal = document.getElementById('helpModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    setTimeout(() => {
+      modal.querySelector('.win-modal-content').style.transform = 'scale(1)';
+    }, 10);
+  }
+}
+
+function hideHelpModal() {
+  const modal = document.getElementById('helpModal');
+  if (modal) {
+    modal.querySelector('.win-modal-content').style.transform = 'scale(0.8)';
+    setTimeout(() => {
+      modal.style.display = 'none';
+    }, 200);
+  }
+}
+
 window.addEventListener('load', resetGame); 

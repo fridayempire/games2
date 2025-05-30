@@ -54,6 +54,8 @@ body {
   border-radius: 0;
   margin: 0 0 1.2rem 0;
   background-color: #1a162b;
+  text-align: center;
+  margin-bottom: 1em;
 }
 
 h1 {
@@ -506,4 +508,58 @@ h1 {
 }
 .win-modal-back:active svg {
   transform: translateX(-4px) scale(1.1);
+}
+
+#helpBtn {
+  position: absolute;
+  top: 18px;
+  right: 70px; /* 18px (restart) + 40px (button width) + 12px gap */
+  width: 40px;
+  height: 40px;
+  background: rgba(30, 30, 50, 0.85);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1001;
+  color: #b7aaff;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  opacity: 0.85;
+}
+#helpBtn:hover, #helpBtn:focus {
+  background: rgba(80, 60, 120, 0.95);
+  color: #fff;
+  outline: none;
+  opacity: 1;
+  transform: scale(1.08) rotate(10deg);
+}
+#helpBtn svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+.help-content {
+  text-align: left;
+  padding: 1em;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.help-content p {
+  margin: 1em 0;
+  line-height: 1.5;
+}
+
+.help-content ul {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.help-content li {
+  margin: 0.5em 0;
+  line-height: 1.4;
 } 

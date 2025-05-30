@@ -650,4 +650,14 @@ function sharePlayButton() {
 const playBtnHeader = document.getElementById('themeToggle');
 if (playBtnHeader) {
     playBtnHeader.onclick = sharePlayButton;
+}
+
+function showHelpModal() {
+  const modal = document.getElementById('helpModal');
+  if (modal) modal.style.display = 'block';
+}
+
+function hideHelpModal() {
+  const modal = document.getElementById('helpModal');
+  if (modal) modal.style.display = 'none';
 } 

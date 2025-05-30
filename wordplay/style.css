@@ -431,4 +431,71 @@ header p {
     margin: 0 auto !important;
     float: none !important;
   }
+}
+
+#helpBtn {
+  position: relative;
+  margin-right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  outline: none;
+}
+#helpBtn .play-btn-mobile {
+  background: #fff9e6;
+  color: #2B2D42;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+#helpBtn:hover .play-btn-mobile, #helpBtn:focus .play-btn-mobile {
+  background: #ffe066;
+  color: #2B2D42;
+  transform: scale(1.08) rotate(10deg);
+}
+#helpBtn svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+/* Help Modal Styles */
+#helpModal.success-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #FFF9E6;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 3000;
+  text-align: center;
+  animation: popIn 0.5s ease;
+}
+#helpModal h2 {
+  color: #2B2D42;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+#helpModal .help-content {
+  color: #2B2D42;
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto;
+}
+#helpModal .help-content ul {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+#helpModal .help-content li {
+  margin: 0.5em 0;
+  line-height: 1.4;
 } 
