@@ -214,27 +214,94 @@ function makePieceElement(piece, gridX, gridY) {
     el.appendChild(cell);
   });
 
-  // Add touch event listeners with proper configuration
+  // Simplified touch handling
   el.addEventListener('touchstart', function(e) {
     e.preventDefault();
-    e.stopPropagation();
     if (dragging) return;
     
-    // Start the drag
-    startDrag(e, piece.id, gridX, gridY);
+    const touch = e.touches[0];
+    const rect = el.getBoundingClientRect();
+    const offsetX = touch.clientX - rect.left;
+    const offsetY = touch.clientY - rect.top;
     
-    // Immediately simulate a touchmove event with the same coordinates
-    if (e.touches && e.touches.length > 0) {
-      const touch = e.touches[0];
-      const moveEvent = new TouchEvent('touchmove', {
-        bubbles: true,
-        cancelable: true,
-        touches: [touch],
-        targetTouches: [touch],
-        changedTouches: [touch]
-      });
-      document.dispatchEvent(moveEvent);
+    // Create ghost piece
+    const ghost = makePieceElement(piece);
+    ghost.classList.add('ghost-piece', 'dragging');
+    ghost.style.position = 'fixed';
+    ghost.style.pointerEvents = 'none';
+    ghost.style.zIndex = '1000';
+    ghost.style.left = `${touch.clientX - offsetX}px`;
+    ghost.style.top = `${touch.clientY - offsetY}px`;
+    document.body.appendChild(ghost);
+    
+    // Set dragging state
+    dragging = {
+      id: piece.id,
+      anchorOffset: { x: offsetX, y: offsetY },
+      fromGrid: gridX !== undefined && gridY !== undefined,
+      ghostEl: ghost,
+      pending: false
+    };
+    
+    if (gridX !== undefined && gridY !== undefined) {
+      piecePositions[piece.id] = null;
+      updateGridState();
     }
+    
+    // Add touch move handler
+    function onTouchMove(e) {
+      e.preventDefault();
+      if (!dragging || !dragging.ghostEl) return;
+      
+      const touch = e.touches[0];
+      dragging.ghostEl.style.left = `${touch.clientX - dragging.anchorOffset.x}px`;
+      dragging.ghostEl.style.top = `${touch.clientY - dragging.anchorOffset.y}px`;
+      lastTouchXY = { x: touch.clientX, y: touch.clientY };
+    }
+    
+    // Add touch end handler
+    function onTouchEnd(e) {
+      e.preventDefault();
+      if (!dragging) return;
+      
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('touchcancel', onTouchEnd);
+      
+      const touch = e.changedTouches[0];
+      const x = touch.clientX;
+      const y = touch.clientY;
+      
+      // Calculate grid position
+      const grid = document.getElementById('gameGrid');
+      const gridRect = grid.getBoundingClientRect();
+      const gx = Math.round((x - gridRect.left - dragging.anchorOffset.x) / getCellSize());
+      const gy = Math.round((y - gridRect.top - dragging.anchorOffset.y) / getCellSize());
+      
+      // Try to place piece
+      if (isValidPlacement(piece, gx, gy)) {
+        piecePositions[piece.id] = { x: gx, y: gy };
+      } else {
+        piecePositions[piece.id] = null;
+      }
+      
+      // Cleanup
+      if (dragging.ghostEl) {
+        dragging.ghostEl.remove();
+      }
+      updateGridState();
+      dragging = null;
+      lastTouchXY = null;
+      render();
+      checkWin();
+    }
+    
+    // Add event listeners
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+    document.addEventListener('touchcancel', onTouchEnd);
+    
+    render();
   }, { passive: false });
 
   el.addEventListener('mousedown', e => startDrag(e, piece.id, gridX, gridY));
