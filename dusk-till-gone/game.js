@@ -157,16 +157,16 @@ function render() {
           const touch = e.touches[0];
           const rect = overlayCell.getBoundingClientRect();
           
-          // Find the existing piece element
-          const existingPiece = document.querySelector(`.piece[data-id="${piece.id}"]`);
-          if (!existingPiece) return;
+          // Find the actual piece element
+          const el = document.querySelector(`.piece[data-id="${piece.id}"]`);
+          if (!el) return;
           
-          // Move the existing piece to fixed position
-          existingPiece.style.position = 'fixed';
-          existingPiece.style.zIndex = '1000';
-          existingPiece.style.left = `${touch.clientX - rect.left}px`;
-          existingPiece.style.top = `${touch.clientY - rect.top}px`;
-          existingPiece.classList.add('dragging');
+          // Move the actual piece to fixed position
+          el.style.position = 'fixed';
+          el.style.zIndex = '1000';
+          el.style.left = `${touch.clientX - rect.left}px`;
+          el.style.top = `${touch.clientY - rect.top}px`;
+          el.classList.add('dragging');
           
           // Calculate anchor offset
           const offsetX = touch.clientX - rect.left;
@@ -181,7 +181,7 @@ function render() {
             id: piece.id,
             anchorOffset: { x: offsetX, y: offsetY },
             fromGrid: true,
-            ghostEl: existingPiece,
+            ghostEl: el,
             pending: false
           };
           
@@ -191,8 +191,8 @@ function render() {
             if (!dragging) return;
             
             const touch = e.touches[0];
-            existingPiece.style.left = `${touch.clientX - offsetX}px`;
-            existingPiece.style.top = `${touch.clientY - offsetY}px`;
+            el.style.left = `${touch.clientX - offsetX}px`;
+            el.style.top = `${touch.clientY - offsetY}px`;
             lastTouchXY = { x: touch.clientX, y: touch.clientY };
           }
           
@@ -219,11 +219,11 @@ function render() {
             }
             
             // Reset piece position
-            existingPiece.style.position = 'relative';
-            existingPiece.style.zIndex = '';
-            existingPiece.style.left = '';
-            existingPiece.style.top = '';
-            existingPiece.classList.remove('dragging');
+            el.style.position = 'relative';
+            el.style.zIndex = '';
+            el.style.left = '';
+            el.style.top = '';
+            el.classList.remove('dragging');
             
             updateGridState();
             dragging = null;
