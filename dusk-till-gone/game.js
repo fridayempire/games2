@@ -158,17 +158,23 @@ function render() {
           const pieceEl = document.querySelector(`.piece[data-id="${piece.id}"]`);
           if (!pieceEl) return;
           
-          // Move the piece to fixed position
+          // Store initial positions
+          const startX = touch.clientX;
+          const startY = touch.clientY;
+          const offsetX = touch.clientX - rect.left;
+          const offsetY = touch.clientY - rect.top;
+          
+          // Move the actual piece to fixed position
           pieceEl.style.position = 'fixed';
           pieceEl.style.zIndex = '1000';
-          pieceEl.style.left = `${touch.clientX - rect.left}px`;
-          pieceEl.style.top = `${touch.clientY - rect.top}px`;
+          pieceEl.style.left = `${touch.clientX - offsetX}px`;
+          pieceEl.style.top = `${touch.clientY - offsetY}px`;
           pieceEl.classList.add('dragging');
           
           // Set dragging state
           dragging = {
             id: piece.id,
-            anchorOffset: { x: rect.left, y: rect.top },
+            anchorOffset: { x: offsetX, y: offsetY },
             fromGrid: true,
             ghostEl: pieceEl,
             pending: false
@@ -183,8 +189,9 @@ function render() {
             if (!dragging) return;
             
             const touch = e.touches[0];
-            pieceEl.style.left = `${touch.clientX - dragging.anchorOffset.x}px`;
-            pieceEl.style.top = `${touch.clientY - dragging.anchorOffset.y}px`;
+            pieceEl.style.left = `${touch.clientX - offsetX}px`;
+            pieceEl.style.top = `${touch.clientY - offsetY}px`;
+            lastTouchXY = { x: touch.clientX, y: touch.clientY };
           }
           
           // Add touch end handler
@@ -198,8 +205,8 @@ function render() {
             
             const touch = e.changedTouches[0];
             const gridRect = grid.getBoundingClientRect();
-            const gx = Math.round((touch.clientX - gridRect.left - dragging.anchorOffset.x) / getCellSize());
-            const gy = Math.round((touch.clientY - gridRect.top - dragging.anchorOffset.y) / getCellSize());
+            const gx = Math.round((touch.clientX - gridRect.left - offsetX) / getCellSize());
+            const gy = Math.round((touch.clientY - gridRect.top - offsetY) / getCellSize());
             
             // Try to place piece
             if (isValidPlacement(piece, gx, gy)) {
@@ -217,6 +224,7 @@ function render() {
             
             updateGridState();
             dragging = null;
+            lastTouchXY = null;
             render();
             checkWin();
           }
