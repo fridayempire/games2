@@ -147,7 +147,6 @@ function render() {
         overlayCell.style.webkitUserSelect = 'none';
         overlayCell.style.userSelect = 'none';
         
-        // Use the exact same touch handling as tray pieces
         overlayCell.addEventListener('touchstart', function(e) {
           e.preventDefault();
           if (dragging) return;
@@ -155,14 +154,16 @@ function render() {
           const touch = e.touches[0];
           const rect = overlayCell.getBoundingClientRect();
           
-          // Create a new piece element for dragging
-          const pieceEl = makePieceElement(piece);
+          // Find the actual piece element
+          const pieceEl = document.querySelector(`.piece[data-id="${piece.id}"]`);
+          if (!pieceEl) return;
+          
+          // Move the piece to fixed position
           pieceEl.style.position = 'fixed';
           pieceEl.style.zIndex = '1000';
           pieceEl.style.left = `${touch.clientX - rect.left}px`;
           pieceEl.style.top = `${touch.clientY - rect.top}px`;
           pieceEl.classList.add('dragging');
-          document.body.appendChild(pieceEl);
           
           // Set dragging state
           dragging = {
@@ -184,7 +185,6 @@ function render() {
             const touch = e.touches[0];
             pieceEl.style.left = `${touch.clientX - dragging.anchorOffset.x}px`;
             pieceEl.style.top = `${touch.clientY - dragging.anchorOffset.y}px`;
-            lastTouchXY = { x: touch.clientX, y: touch.clientY };
           }
           
           // Add touch end handler
@@ -208,12 +208,15 @@ function render() {
               piecePositions[piece.id] = null;
             }
             
-            // Remove the dragged piece
-            pieceEl.remove();
+            // Reset piece position
+            pieceEl.style.position = 'relative';
+            pieceEl.style.zIndex = '';
+            pieceEl.style.left = '';
+            pieceEl.style.top = '';
+            pieceEl.classList.remove('dragging');
             
             updateGridState();
             dragging = null;
-            lastTouchXY = null;
             render();
             checkWin();
           }
