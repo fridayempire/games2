@@ -217,40 +217,38 @@ function makePieceElement(piece, gridX, gridY) {
     el.appendChild(cell);
   });
 
-  // Safari-specific touch handling
-  let touchStartTime = 0;
-  let touchStartY = 0;
-  let isScrolling = false;
+  // Chess-style touch handling
+  let startX = 0;
+  let startY = 0;
+  let offsetX = 0;
+  let offsetY = 0;
 
   el.addEventListener('touchstart', function(e) {
     e.preventDefault();
     if (dragging) return;
     
-    touchStartTime = Date.now();
-    touchStartY = e.touches[0].clientY;
-    isScrolling = false;
-    
     const touch = e.touches[0];
     const rect = el.getBoundingClientRect();
-    const offsetX = touch.clientX - rect.left;
-    const offsetY = touch.clientY - rect.top;
     
-    // Create ghost piece immediately
-    const ghost = makePieceElement(piece);
-    ghost.classList.add('ghost-piece', 'dragging');
-    ghost.style.position = 'fixed';
-    ghost.style.pointerEvents = 'none';
-    ghost.style.zIndex = '1000';
-    ghost.style.left = `${touch.clientX - offsetX}px`;
-    ghost.style.top = `${touch.clientY - offsetY}px`;
-    document.body.appendChild(ghost);
+    // Store initial positions
+    startX = touch.clientX;
+    startY = touch.clientY;
+    offsetX = touch.clientX - rect.left;
+    offsetY = touch.clientY - rect.top;
+    
+    // Move the actual piece to fixed position
+    el.style.position = 'fixed';
+    el.style.zIndex = '1000';
+    el.style.left = `${touch.clientX - offsetX}px`;
+    el.style.top = `${touch.clientY - offsetY}px`;
+    el.classList.add('dragging');
     
     // Set dragging state
     dragging = {
       id: piece.id,
       anchorOffset: { x: offsetX, y: offsetY },
       fromGrid: gridX !== undefined && gridY !== undefined,
-      ghostEl: ghost,
+      ghostEl: el, // Use the actual piece instead of a ghost
       pending: false
     };
     
@@ -262,23 +260,12 @@ function makePieceElement(piece, gridX, gridY) {
     // Add touch move handler
     function onTouchMove(e) {
       e.preventDefault();
-      if (!dragging || !dragging.ghostEl) return;
+      if (!dragging) return;
       
       const touch = e.touches[0];
-      const deltaY = Math.abs(touch.clientY - touchStartY);
-      
-      // If we've moved vertically more than 10px in the first 100ms, consider it a scroll
-      if (Date.now() - touchStartTime < 100 && deltaY > 10) {
-        isScrolling = true;
-        return;
-      }
-      
-      // Only update position if we're not scrolling
-      if (!isScrolling) {
-        dragging.ghostEl.style.left = `${touch.clientX - dragging.anchorOffset.x}px`;
-        dragging.ghostEl.style.top = `${touch.clientY - dragging.anchorOffset.y}px`;
-        lastTouchXY = { x: touch.clientX, y: touch.clientY };
-      }
+      el.style.left = `${touch.clientX - offsetX}px`;
+      el.style.top = `${touch.clientY - offsetY}px`;
+      lastTouchXY = { x: touch.clientX, y: touch.clientY };
     }
     
     // Add touch end handler
@@ -290,17 +277,6 @@ function makePieceElement(piece, gridX, gridY) {
       document.removeEventListener('touchend', onTouchEnd);
       document.removeEventListener('touchcancel', onTouchEnd);
       
-      // If we were scrolling, don't process the drag
-      if (isScrolling) {
-        if (dragging.ghostEl) {
-          dragging.ghostEl.remove();
-        }
-        dragging = null;
-        lastTouchXY = null;
-        render();
-        return;
-      }
-      
       const touch = e.changedTouches[0];
       const x = touch.clientX;
       const y = touch.clientY;
@@ -308,8 +284,8 @@ function makePieceElement(piece, gridX, gridY) {
       // Calculate grid position
       const grid = document.getElementById('gameGrid');
       const gridRect = grid.getBoundingClientRect();
-      const gx = Math.round((x - gridRect.left - dragging.anchorOffset.x) / getCellSize());
-      const gy = Math.round((y - gridRect.top - dragging.anchorOffset.y) / getCellSize());
+      const gx = Math.round((x - gridRect.left - offsetX) / getCellSize());
+      const gy = Math.round((y - gridRect.top - offsetY) / getCellSize());
       
       // Try to place piece
       if (isValidPlacement(piece, gx, gy)) {
@@ -318,10 +294,13 @@ function makePieceElement(piece, gridX, gridY) {
         piecePositions[piece.id] = null;
       }
       
-      // Cleanup
-      if (dragging.ghostEl) {
-        dragging.ghostEl.remove();
-      }
+      // Reset piece position
+      el.style.position = 'relative';
+      el.style.zIndex = '';
+      el.style.left = '';
+      el.style.top = '';
+      el.classList.remove('dragging');
+      
       updateGridState();
       dragging = null;
       lastTouchXY = null;
