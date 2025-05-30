@@ -157,22 +157,20 @@ function render() {
           const touch = e.touches[0];
           const rect = overlayCell.getBoundingClientRect();
           
-          // Create a new piece element for dragging
-          const ghost = makePieceElement(piece);
-          ghost.classList.add('ghost-piece', 'dragging');
-          ghost.style.position = 'fixed';
-          ghost.style.pointerEvents = 'none';
-          ghost.style.zIndex = '1000';
-          ghost.style.touchAction = 'none';
+          // Find the existing piece element
+          const existingPiece = document.querySelector(`.piece[data-id="${piece.id}"]`);
+          if (!existingPiece) return;
+          
+          // Move the existing piece to fixed position
+          existingPiece.style.position = 'fixed';
+          existingPiece.style.zIndex = '1000';
+          existingPiece.style.left = `${touch.clientX - rect.left}px`;
+          existingPiece.style.top = `${touch.clientY - rect.top}px`;
+          existingPiece.classList.add('dragging');
           
           // Calculate anchor offset
           const offsetX = touch.clientX - rect.left;
           const offsetY = touch.clientY - rect.top;
-          
-          // Position ghost piece immediately
-          ghost.style.left = `${touch.clientX - offsetX}px`;
-          ghost.style.top = `${touch.clientY - offsetY}px`;
-          document.body.appendChild(ghost);
           
           // Clear piece position and update grid state
           piecePositions[piece.id] = null;
@@ -183,7 +181,7 @@ function render() {
             id: piece.id,
             anchorOffset: { x: offsetX, y: offsetY },
             fromGrid: true,
-            ghostEl: ghost,
+            ghostEl: existingPiece,
             pending: false
           };
           
@@ -193,8 +191,8 @@ function render() {
             if (!dragging) return;
             
             const touch = e.touches[0];
-            ghost.style.left = `${touch.clientX - offsetX}px`;
-            ghost.style.top = `${touch.clientY - offsetY}px`;
+            existingPiece.style.left = `${touch.clientX - offsetX}px`;
+            existingPiece.style.top = `${touch.clientY - offsetY}px`;
             lastTouchXY = { x: touch.clientX, y: touch.clientY };
           }
           
@@ -220,8 +218,12 @@ function render() {
               piecePositions[piece.id] = null;
             }
             
-            // Remove ghost piece
-            ghost.remove();
+            // Reset piece position
+            existingPiece.style.position = 'relative';
+            existingPiece.style.zIndex = '';
+            existingPiece.style.left = '';
+            existingPiece.style.top = '';
+            existingPiece.classList.remove('dragging');
             
             updateGridState();
             dragging = null;
