@@ -142,12 +142,108 @@ function render() {
         overlayCell.style.cursor = 'grab';
         overlayCell.style.background = 'rgba(0,0,0,0)';
         overlayCell.style.zIndex = 100;
-        overlayCell.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
+        overlayCell.style.touchAction = 'none';
+        overlayCell.style.webkitTouchCallout = 'none';
+        overlayCell.style.webkitUserSelect = 'none';
+        overlayCell.style.userSelect = 'none';
+        
+        // Chess-style touch handling for grid pieces
+        let startX = 0;
+        let startY = 0;
+        let offsetX = 0;
+        let offsetY = 0;
+        
         overlayCell.addEventListener('touchstart', function(e) {
           e.preventDefault();
           if (dragging) return;
-          startDrag(e, piece.id, pos.x, pos.y);
-        }, {passive: false});
+          
+          const touch = e.touches[0];
+          const rect = overlayCell.getBoundingClientRect();
+          
+          // Store initial positions
+          startX = touch.clientX;
+          startY = touch.clientY;
+          offsetX = touch.clientX - rect.left;
+          offsetY = touch.clientY - rect.top;
+          
+          // Create a visible piece for dragging
+          const dragPiece = makePieceElement(piece);
+          dragPiece.style.position = 'fixed';
+          dragPiece.style.zIndex = '1000';
+          dragPiece.style.left = `${touch.clientX - offsetX}px`;
+          dragPiece.style.top = `${touch.clientY - offsetY}px`;
+          dragPiece.classList.add('dragging');
+          document.body.appendChild(dragPiece);
+          
+          // Set dragging state
+          dragging = {
+            id: piece.id,
+            anchorOffset: { x: offsetX, y: offsetY },
+            fromGrid: true,
+            ghostEl: dragPiece,
+            pending: false
+          };
+          
+          piecePositions[piece.id] = null;
+          updateGridState();
+          
+          // Add touch move handler
+          function onTouchMove(e) {
+            e.preventDefault();
+            if (!dragging) return;
+            
+            const touch = e.touches[0];
+            dragPiece.style.left = `${touch.clientX - offsetX}px`;
+            dragPiece.style.top = `${touch.clientY - offsetY}px`;
+            lastTouchXY = { x: touch.clientX, y: touch.clientY };
+          }
+          
+          // Add touch end handler
+          function onTouchEnd(e) {
+            e.preventDefault();
+            if (!dragging) return;
+            
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+            document.removeEventListener('touchcancel', onTouchEnd);
+            
+            const touch = e.changedTouches[0];
+            const x = touch.clientX;
+            const y = touch.clientY;
+            
+            // Calculate grid position
+            const gridRect = grid.getBoundingClientRect();
+            const gx = Math.round((x - gridRect.left - offsetX) / getCellSize());
+            const gy = Math.round((y - gridRect.top - offsetY) / getCellSize());
+            
+            // Try to place piece
+            if (isValidPlacement(piece, gx, gy)) {
+              piecePositions[piece.id] = { x: gx, y: gy };
+            } else {
+              piecePositions[piece.id] = null;
+            }
+            
+            // Cleanup
+            if (dragPiece) {
+              dragPiece.remove();
+            }
+            
+            updateGridState();
+            dragging = null;
+            lastTouchXY = null;
+            render();
+            checkWin();
+          }
+          
+          // Add event listeners
+          document.addEventListener('touchmove', onTouchMove, { passive: false });
+          document.addEventListener('touchend', onTouchEnd);
+          document.addEventListener('touchcancel', onTouchEnd);
+          
+          render();
+        }, { passive: false });
+        
+        overlayCell.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
         grid.appendChild(overlayCell);
       });
     }
