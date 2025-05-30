@@ -227,7 +227,7 @@ h1 {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
+  z-index: 1001;
   transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
   color: #b7aaff;
 }

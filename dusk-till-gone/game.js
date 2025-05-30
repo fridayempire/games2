@@ -147,17 +147,6 @@ function render() {
         overlayCell.style.webkitUserSelect = 'none';
         overlayCell.style.userSelect = 'none';
         
-        // Add touch handler to remove piece from grid
-        overlayCell.addEventListener('touchstart', function(e) {
-          e.preventDefault();
-          if (dragging) return;
-          
-          // Remove piece from grid
-          piecePositions[piece.id] = null;
-          updateGridState();
-          render();
-        }, { passive: false });
-        
         overlayCell.addEventListener('mousedown', e => startDrag(e, piece.id, pos.x, pos.y));
         grid.appendChild(overlayCell);
       });
@@ -302,12 +291,13 @@ function makePieceElement(piece, gridX, gridY) {
         piecePositions[piece.id] = null;
       }
       
-      // Reset piece position
+      // Reset piece position and remove from DOM
       el.style.position = 'relative';
       el.style.zIndex = '';
       el.style.left = '';
       el.style.top = '';
       el.classList.remove('dragging');
+      el.remove(); // Remove the ghost piece from DOM
       
       updateGridState();
       dragging = null;
