@@ -205,6 +205,9 @@ function makePieceElement(piece, gridX, gridY) {
   el.style.margin = '0';
   el.style.padding = '0';
   el.style.touchAction = 'none';
+  el.style.webkitTouchCallout = 'none';
+  el.style.webkitUserSelect = 'none';
+  el.style.userSelect = 'none';
 
   piece.shape.forEach(offset => {
     const cell = document.createElement('div');
@@ -214,17 +217,25 @@ function makePieceElement(piece, gridX, gridY) {
     el.appendChild(cell);
   });
 
-  // Simplified touch handling
+  // Safari-specific touch handling
+  let touchStartTime = 0;
+  let touchStartY = 0;
+  let isScrolling = false;
+
   el.addEventListener('touchstart', function(e) {
     e.preventDefault();
     if (dragging) return;
+    
+    touchStartTime = Date.now();
+    touchStartY = e.touches[0].clientY;
+    isScrolling = false;
     
     const touch = e.touches[0];
     const rect = el.getBoundingClientRect();
     const offsetX = touch.clientX - rect.left;
     const offsetY = touch.clientY - rect.top;
     
-    // Create ghost piece
+    // Create ghost piece immediately
     const ghost = makePieceElement(piece);
     ghost.classList.add('ghost-piece', 'dragging');
     ghost.style.position = 'fixed';
@@ -254,9 +265,20 @@ function makePieceElement(piece, gridX, gridY) {
       if (!dragging || !dragging.ghostEl) return;
       
       const touch = e.touches[0];
-      dragging.ghostEl.style.left = `${touch.clientX - dragging.anchorOffset.x}px`;
-      dragging.ghostEl.style.top = `${touch.clientY - dragging.anchorOffset.y}px`;
-      lastTouchXY = { x: touch.clientX, y: touch.clientY };
+      const deltaY = Math.abs(touch.clientY - touchStartY);
+      
+      // If we've moved vertically more than 10px in the first 100ms, consider it a scroll
+      if (Date.now() - touchStartTime < 100 && deltaY > 10) {
+        isScrolling = true;
+        return;
+      }
+      
+      // Only update position if we're not scrolling
+      if (!isScrolling) {
+        dragging.ghostEl.style.left = `${touch.clientX - dragging.anchorOffset.x}px`;
+        dragging.ghostEl.style.top = `${touch.clientY - dragging.anchorOffset.y}px`;
+        lastTouchXY = { x: touch.clientX, y: touch.clientY };
+      }
     }
     
     // Add touch end handler
@@ -267,6 +289,17 @@ function makePieceElement(piece, gridX, gridY) {
       document.removeEventListener('touchmove', onTouchMove);
       document.removeEventListener('touchend', onTouchEnd);
       document.removeEventListener('touchcancel', onTouchEnd);
+      
+      // If we were scrolling, don't process the drag
+      if (isScrolling) {
+        if (dragging.ghostEl) {
+          dragging.ghostEl.remove();
+        }
+        dragging = null;
+        lastTouchXY = null;
+        render();
+        return;
+      }
       
       const touch = e.changedTouches[0];
       const x = touch.clientX;
