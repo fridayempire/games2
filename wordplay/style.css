@@ -498,4 +498,9 @@ header p {
 #helpModal .help-content li {
   margin: 0.5em 0;
   line-height: 1.4;
+}
+
+#dateDropdown {
+  visibility: hidden !important;
+  display: none !important;
 } 
