@@ -9,6 +9,8 @@ let currentInputIndex = 0;
 let awaitingKeyboard = false;
 let lastWindowHeight = window.innerHeight;
 let hasScrolledOnMobile = false;
+let guessedLetters = new Set(); // Track guessed letters
+let correctLetters = new Set(); // Track correct letters
 
 // DOM Elements
 const dailyImage = document.getElementById('dailyImage');
@@ -175,7 +177,23 @@ function updateLetterBoxes(input) {
         if (highlightIndex === -1) highlightIndex = letters.length;
     }
     letterBoxes.forEach((box, index) => {
-        box.textContent = letters[index] || '';
+        const letter = letters[index] || '';
+        box.textContent = letter;
+        
+        // Style based on letter status
+        if (letter) {
+            if (correctLetters.has(letter)) {
+                box.style.backgroundColor = '#4CAF50'; // Green for correct letters
+                box.style.color = 'white';
+            } else if (guessedLetters.has(letter)) {
+                box.style.backgroundColor = '#9E9E9E'; // Grey for incorrect guesses
+                box.style.color = 'white';
+            } else {
+                box.style.backgroundColor = 'white';
+                box.style.color = '#2B2D42';
+            }
+        }
+        
         if (index === highlightIndex) {
             box.classList.add('focused');
             box.style.border = '4px solid #F8C82B'; // yellow
@@ -358,6 +376,14 @@ function hideRevealedModal() {
 // Check the guess
 function checkGuess() {
     if (currentInput.length !== currentAnswer.length) return;
+    
+    // Update guessed letters
+    currentInput.split('').forEach(letter => {
+        guessedLetters.add(letter);
+        if (currentAnswer.includes(letter)) {
+            correctLetters.add(letter);
+        }
+    });
     
     if (currentInput.toLowerCase() === currentAnswer.toLowerCase()) {
         handleCorrectGuess();
