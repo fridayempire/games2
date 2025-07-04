@@ -40,10 +40,10 @@ if (dateDropdown) {
 
 // Get day of year (1-366)
 function getDayOfYear(date) {
-    const start = new Date(date.getFullYear(), 0, 0);
+    const start = new Date(date.getFullYear(), 0, 1);
     const diff = date - start;
     const oneDay = 1000 * 60 * 60 * 24;
-    return Math.floor(diff / oneDay);
+    return Math.floor(diff / oneDay) + 1;
 }
 
 // Format date as YYYY-DDD
