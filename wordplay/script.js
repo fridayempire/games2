@@ -124,7 +124,8 @@ function createLetterBoxes(length) {
             } else if (e.key === 'Enter') {
                 // Only submit if all boxes are filled
                 updateCurrentInputFromBoxes();
-                if (currentInput.length === length && currentInput.split('').every(l => l)) {
+                const allFilled = letterBoxes.every(box => box.value && box.value.trim() !== '');
+                if (currentInput.length === length && allFilled) {
                     checkGuess();
                 }
             }
@@ -147,7 +148,7 @@ function createLetterBoxes(length) {
 
 // Update currentInput from all boxes
 function updateCurrentInputFromBoxes() {
-    currentInput = letterBoxes.map(box => box.value).join('');
+    currentInput = letterBoxes.map(box => box.value || '').join('');
 }
 
 // Update letter boxes with current input (for feedback coloring)
@@ -195,7 +196,15 @@ function findImageForTodayFromManifest(dateStr) {
 // Load the daily image and set up the game
 async function loadDailyImage() {
     await fetchImageManifest();
-    correctLetters = [];
+    // Reset game state
+    guessesLeft = 5;
+    failedGuesses = 0;
+    currentInput = '';
+    guessedLetters = new Set();
+    correctLetters = new Set();
+    // Update the streak count display
+    streakCount.textContent = guessesLeft;
+    streakCount.style.backgroundColor = '#2B2D42';
     const dropdownVal = getTargetDropdownValue();
     let imageInfo = null;
     let dateToShow = '';
@@ -345,7 +354,9 @@ function hideRevealedModal() {
 
 // Check the guess
 function checkGuess() {
-    if (currentInput.length !== currentAnswer.length) return;
+    if (currentInput.length !== currentAnswer.length) {
+        return;
+    }
     
     // Update guessed letters
     currentInput.split('').forEach(letter => {
@@ -373,7 +384,8 @@ function checkGuess() {
 // Event Listeners
 guessButton.addEventListener('click', () => {
     updateCurrentInputFromBoxes();
-    if (currentInput.length === letterBoxes.length && currentInput.split('').every(l => l)) {
+    const allFilled = letterBoxes.every(box => box.value && box.value.trim() !== '');
+    if (currentInput.length === letterBoxes.length && allFilled) {
         checkGuess();
     }
 });
@@ -590,7 +602,11 @@ if (mobileInput) {
   mobileInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.keyCode === 13) {
       e.preventDefault();
-      checkGuess();
+      updateCurrentInputFromBoxes();
+      const allFilled = letterBoxes.every(box => box.value && box.value.trim() !== '');
+      if (currentInput.length === letterBoxes.length && allFilled) {
+        checkGuess();
+      }
     }
   });
 }
