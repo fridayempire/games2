@@ -137,9 +137,11 @@ function createLetterBoxes(length) {
         letterBoxesContainer.appendChild(input);
         letterBoxes.push(input);
     }
-    // Focus first box after a short delay
+    // Focus mobile input after a short delay (for mobile devices)
     setTimeout(() => {
-        if (letterBoxes.length > 0) {
+        if (mobileInput) {
+            mobileInput.focus();
+        } else if (letterBoxes.length > 0) {
             letterBoxes[0].focus();
         }
     }, 100);
@@ -375,10 +377,12 @@ function checkGuess() {
     }
     currentInput = '';
     updateLetterBoxes('');
+    // Clear mobile input
+    if (mobileInput) mobileInput.value = '';
     setTimeout(() => {
         letterBoxes[0].focus();
     }, 500); // Wait for the jiggle animation to finish
-    focusMobileInput();
+    focusMobileInputAfterGuess();
 }
 
 // Event Listeners
@@ -532,20 +536,20 @@ if (dailyImageEl) {
 //     if (hiddenMobileInput) hiddenMobileInput.focus();
 // });
 
-// Focus the hidden input after each guess and after letter box creation
-// function focusHiddenInput() {
-//     if (hiddenMobileInput) hiddenMobileInput.focus();
-// }
+// Focus the mobile input after each guess and after letter box creation
+function focusMobileInputAfterGuess() {
+    if (mobileInput) mobileInput.focus();
+}
 
-// When the hidden input changes, update the letter boxes
-// if (hiddenMobileInput) {
-//     hiddenMobileInput.addEventListener('input', (e) => {
-//         let val = hiddenMobileInput.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
-//         val = val.slice(0, currentAnswer.length);
-//         currentInput = val;
-//         updateLetterBoxes(currentInput);
-//     });
-// }
+// When the mobile input changes, update the letter boxes
+if (mobileInput) {
+    mobileInput.addEventListener('input', (e) => {
+        let val = mobileInput.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        val = val.slice(0, currentAnswer.length);
+        currentInput = val;
+        updateLetterBoxes(currentInput);
+    });
+}
 
 function focusMobileInput() {
     if (mobileInput) mobileInput.focus();
@@ -585,7 +589,7 @@ function smoothScrollTo(targetY, duration) {
     requestAnimationFrame(animateScroll);
 }
 
-letterBoxesContainer.addEventListener('click', focusMobileInput);
+letterBoxesContainer.addEventListener('click', focusMobileInputAfterGuess);
 
 // 1. Make clicking outside the congratulations popup close it
 const successModal = document.getElementById('successModal');
