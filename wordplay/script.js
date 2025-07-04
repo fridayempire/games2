@@ -493,6 +493,7 @@ async function populateDateDropdown() {
 
 // Call this on page load
 populateDateDropdown();
+loadDailyImage();
 
 function syncBoxWidths() {
     // Get the image card and text card containers
