@@ -491,6 +491,25 @@ header p {
   max-width: 400px;
   margin: 0 auto;
 }
+
+/* Mobile styles for help modal */
+@media (max-width: 768px) {
+  #helpModal.success-modal {
+    width: 90vw;
+    max-width: 90vw;
+    padding: 1.5rem;
+    margin: 0 1rem;
+  }
+  
+  #helpModal .help-content {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  #helpModal h2 {
+    font-size: 1.5rem;
+  }
+}
 #helpModal .help-content ul {
   margin: 1em 0;
   padding-left: 1.5em;
