@@ -98,28 +98,40 @@ function createLetterBoxes(length) {
         input.autocomplete = 'off';
         input.spellcheck = false;
         input.inputMode = 'text';
+        input.pattern = '[a-zA-Z]';
         input.style.textTransform = 'uppercase';
+        input.setAttribute('aria-label', `Letter ${i+1}`);
+        input.addEventListener('focus', () => {
+            setTimeout(() => input.select(), 0);
+        });
         input.addEventListener('input', (e) => {
             let val = input.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
             input.value = val;
-            // Move to next box if letter entered
             if (val && i < length - 1) {
-                letterBoxes[i + 1].focus();
+                setTimeout(() => letterBoxes[i + 1].focus(), 0);
             }
             updateCurrentInputFromBoxes();
         });
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace') {
                 if (!input.value && i > 0) {
-                    letterBoxes[i - 1].focus();
+                    setTimeout(() => letterBoxes[i - 1].focus(), 0);
                 }
             } else if (e.key === 'ArrowLeft' && i > 0) {
-                letterBoxes[i - 1].focus();
+                setTimeout(() => letterBoxes[i - 1].focus(), 0);
             } else if (e.key === 'ArrowRight' && i < length - 1) {
-                letterBoxes[i + 1].focus();
+                setTimeout(() => letterBoxes[i + 1].focus(), 0);
             } else if (e.key === 'Enter') {
-                checkGuess();
+                // Only submit if all boxes are filled
+                updateCurrentInputFromBoxes();
+                if (currentInput.length === length && currentInput.split('').every(l => l)) {
+                    checkGuess();
+                }
             }
+        });
+        // On tap/click, focus the input (for mobile)
+        input.addEventListener('touchstart', () => {
+            setTimeout(() => input.focus(), 0);
         });
         letterBoxesContainer.appendChild(input);
         letterBoxes.push(input);
@@ -133,6 +145,7 @@ function createLetterBoxes(length) {
     setTimeout(syncBoxWidths, 50);
 }
 
+// Update currentInput from all boxes
 function updateCurrentInputFromBoxes() {
     currentInput = letterBoxes.map(box => box.value).join('');
 }
@@ -358,7 +371,12 @@ function checkGuess() {
 }
 
 // Event Listeners
-guessButton.addEventListener('click', checkGuess);
+guessButton.addEventListener('click', () => {
+    updateCurrentInputFromBoxes();
+    if (currentInput.length === letterBoxes.length && currentInput.split('').every(l => l)) {
+        checkGuess();
+    }
+});
 
 // Initialize the game
 
