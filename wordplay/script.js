@@ -90,116 +90,73 @@ function getTargetDate() {
 function createLetterBoxes(length) {
     letterBoxesContainer.innerHTML = '';
     letterBoxes = [];
-    const maxPerRow = window.innerWidth < 600 ? 7 : 12;
     for (let i = 0; i < length; i++) {
-        if (i > 0 && i % maxPerRow === 0) {
-            letterBoxesContainer.appendChild(document.createElement('br'));
-        }
-        const box = document.createElement('div');
-        box.className = 'letter-box w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center text-2xl font-bold uppercase cursor-text';
-        box.tabIndex = 0; // Make div focusable
-        box.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            currentInputIndex = i;
-            box.focus();
-            updateLetterBoxes(currentInput);
-            if (window.innerWidth < 600 && mobileInput) {
-                mobileInput.focus();
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 1;
+        input.className = 'letter-box w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center text-2xl font-bold uppercase text-center';
+        input.autocomplete = 'off';
+        input.spellcheck = false;
+        input.inputMode = 'text';
+        input.style.textTransform = 'uppercase';
+        input.addEventListener('input', (e) => {
+            let val = input.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
+            input.value = val;
+            // Move to next box if letter entered
+            if (val && i < length - 1) {
+                letterBoxes[i + 1].focus();
+            }
+            updateCurrentInputFromBoxes();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                if (!input.value && i > 0) {
+                    letterBoxes[i - 1].focus();
+                }
+            } else if (e.key === 'ArrowLeft' && i > 0) {
+                letterBoxes[i - 1].focus();
+            } else if (e.key === 'ArrowRight' && i < length - 1) {
+                letterBoxes[i + 1].focus();
+            } else if (e.key === 'Enter') {
+                checkGuess();
             }
         });
-        box.addEventListener('focus', () => {
-            currentInputIndex = i;
-            updateLetterBoxes(currentInput);
-            // On mobile, scroll the image to the top of the screen
-            // if (window.innerWidth < 600) {
-            //     setTimeout(() => {
-            //         const dailyImage = document.getElementById('dailyImage');
-            //         if (dailyImage) {
-            //             const rect = dailyImage.getBoundingClientRect();
-            //             const scrollY = window.scrollY + rect.top - 12; // 12px padding
-            //             window.scrollTo({ top: scrollY, behavior: 'smooth' });
-            //         }
-            //     }, 100);
-            // }
-        });
-        box.addEventListener('blur', (e) => {
-            setTimeout(() => {
-                if (document.activeElement !== box) {
-                    box.classList.remove('focused');
-                }
-            }, 10);
-        });
-        box.addEventListener('keydown', handleLetterBoxKeydown);
-        letterBoxesContainer.appendChild(box);
-        letterBoxes.push(box);
+        letterBoxesContainer.appendChild(input);
+        letterBoxes.push(input);
     }
-    // Focus first box after a short delay to ensure it's in the DOM
+    // Focus first box after a short delay
     setTimeout(() => {
         if (letterBoxes.length > 0) {
             letterBoxes[0].focus();
         }
     }, 100);
     setTimeout(syncBoxWidths, 50);
-    // Do NOT call focusMobileInput here
 }
 
-// Handle keyboard input in letter boxes
-function handleLetterBoxKeydown(e) {
-    const currentIndex = letterBoxes.indexOf(e.target);
-    
-    if (e.key === 'Backspace') {
-        if (currentInput.length > 0) {
-            currentInput = currentInput.slice(0, -1);
-            updateLetterBoxes(currentInput);
-            letterBoxes[Math.min(currentIndex, currentInput.length)].focus();
-        }
-    } else if (e.key === 'Enter') {
-        checkGuess();
-    } else if (/^[a-zA-Z]$/.test(e.key)) {
-        if (currentInput.length < currentAnswer.length) {
-            currentInput += e.key.toLowerCase();
-            updateLetterBoxes(currentInput);
-            if (currentInput.length < currentAnswer.length) {
-                letterBoxes[currentInput.length].focus();
-            }
-        }
-    }
+function updateCurrentInputFromBoxes() {
+    currentInput = letterBoxes.map(box => box.value).join('');
 }
 
-// Update letter boxes with current input
+// Update letter boxes with current input (for feedback coloring)
 function updateLetterBoxes(input) {
     const letters = input.split('');
-    let highlightIndex = currentInputIndex;
-    if (window.innerWidth < 600) {
-        highlightIndex = letters.findIndex(l => !l);
-        // If all boxes are filled, highlight none (or the last box)
-        if (highlightIndex === -1) highlightIndex = letters.length;
-    }
     letterBoxes.forEach((box, index) => {
-        const letter = letters[index] || '';
-        box.textContent = letter;
-        
+        box.value = letters[index] || '';
         // Style based on letter status
-        if (letter) {
-            if (correctLetters.has(letter)) {
+        if (letters[index]) {
+            if (correctLetters.has(letters[index])) {
                 box.style.backgroundColor = '#4CAF50'; // Green for correct letters
                 box.style.color = 'white';
-            } else if (guessedLetters.has(letter)) {
+            } else if (guessedLetters.has(letters[index])) {
                 box.style.backgroundColor = '#9E9E9E'; // Grey for incorrect guesses
                 box.style.color = 'white';
             } else {
                 box.style.backgroundColor = 'white';
                 box.style.color = '#2B2D42';
             }
-        }
-        
-        if (index === highlightIndex) {
-            box.classList.add('focused');
-            box.style.border = '4px solid #F8C82B'; // yellow
         } else {
-            box.classList.remove('focused');
-            box.style.border = letters[index] ? '2px solid #2B2D42' : '2px solid #E0E0E0';
+            box.style.backgroundColor = 'white';
+            box.style.color = '#2B2D42';
         }
     });
 }
@@ -275,7 +232,7 @@ async function loadDailyImage() {
 function handleCorrectGuess() {
     // Fill in the letter boxes with the correct word, navy background, and white text
     letterBoxes.forEach((box, i) => {
-        box.textContent = currentAnswer[i] ? currentAnswer[i].toUpperCase() : '';
+        box.value = currentAnswer[i] ? currentAnswer[i].toUpperCase() : '';
         box.style.backgroundColor = '#2B2D42'; // Navy
         box.style.color = '#fff';
         box.style.borderColor = '#2B2D42';
@@ -352,7 +309,7 @@ function revealAnswer() {
     hideRevealModal();
     // Fill in the letter boxes with the correct word, navy background, and white text
     letterBoxes.forEach((box, i) => {
-        box.textContent = currentAnswer[i] ? currentAnswer[i].toUpperCase() : '';
+        box.value = currentAnswer[i] ? currentAnswer[i].toUpperCase() : '';
         box.style.backgroundColor = '#2B2D42'; // Navy
         box.style.color = '#fff';
         box.style.borderColor = '#2B2D42';
@@ -618,41 +575,6 @@ if (mobileInput) {
       checkGuess();
     }
   });
-}
-
-if (mobileInput) {
-    mobileInput.addEventListener('input', (e) => {
-        let val = mobileInput.value.replace(/[^a-zA-Z]/g, '').toLowerCase();
-        if (!val) return;
-        let arr = currentInput.split('');
-        arr[currentInputIndex] = val[val.length - 1];
-        currentInput = arr.join('').slice(0, currentAnswer.length);
-        updateLetterBoxes(currentInput);
-        // Move highlight to next box if not at end
-        if (currentInputIndex < currentAnswer.length - 1) {
-            currentInputIndex++;
-        }
-        // Always keep the input focused so the keyboard stays open
-        mobileInput.focus();
-        // Clear the input so only one letter is processed at a time
-        mobileInput.value = '';
-    });
-    
-    mobileInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' || e.keyCode === 8) {
-            e.preventDefault();
-            let arr = currentInput.split('');
-            // Remove the letter at the currentInputIndex or previous
-            if (currentInputIndex > 0 && !arr[currentInputIndex]) {
-                currentInputIndex--;
-            }
-            arr[currentInputIndex] = '';
-            currentInput = arr.join('').slice(0, currentAnswer.length);
-            updateLetterBoxes(currentInput);
-            // Always keep the input focused
-            mobileInput.focus();
-        }
-    });
 }
 
 function sharePlayButton() {
