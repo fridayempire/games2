@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tick, Click, Boom!</title>
+    <!-- Preload critical wire images for faster loading -->
+    <link rel="preload" href="assets/bluewire_full.png" as="image">
+    <link rel="preload" href="assets/greenwire_full.png" as="image">
+    <link rel="preload" href="assets/redwire_full.png" as="image">
+    <link rel="preload" href="assets/yellowwire_full.png" as="image">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Homepage -->
+    <div id="homepage">
+        <div class="background-timer">10</div>
+        <div class="bomb-container">
+            <h1 class="game-title">Tick, Click, Boom!</h1>
+            <div class="click-to-begin">CLICK TO BEGIN</div>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <!-- Briefing Modal -->
+        <div id="briefing-screen" class="modal-overlay hidden">
+            <div class="modal">
+                <h1 class="mission-number">Mission Briefing</h1>
+                <div class="briefing-text">
+                    <p>You have <strong>10 seconds</strong> to cut <strong>one wire</strong> and defuse the bomb.</p>
+                    <p>You'll get <strong>3 pieces of intel</strong> to help you find the right wire.</p>
+                    <p>There are <strong>10 wires</strong>. Only <strong>one</strong> is safe.</p>
+                    <p>Cut the wrong one... and <strong>BOOM!</strong></p>
+                    <p>Keep defusing bombs until you fail.</p>
+                </div>
+                <button id="start-mission" class="start-button">
+                    Start Defusing
+                    <div class="loading-spinner hidden"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen hidden">
+            <div class="bomb-panel">
+                <!-- Timer Module -->
+                <div class="module timer-module">
+                    <div class="module-label">TIME REMAINING</div>
+                    <div class="time-remaining-box">
+                        <div id="timer" class="digital-display">10</div>
+                    </div>
+                    <div class="module-status"></div>
+                </div>
+
+                <!-- Clues Module -->
+                <div class="module clues-module">
+                    <div class="module-label">INTEL</div>
+                    <div id="clues-container"></div>
+                    <div class="module-status"></div>
+                </div>
+
+                <!-- Wires Module -->
+                <div class="module wires-module">
+                    <div class="module-label">WIRE SEQUENCE</div>
+                    <div id="wires-container"></div>
+                    <div class="module-status"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="screen hidden">
+            <div class="result-modal">
+                <h1 class="mission-debrief-title">Mission Failed</h1>
+                <div id="result-message"></div>
+                <div class="result-buttons">
+                    <button id="try-again" class="button hidden">Try Again</button>
+                    <button id="share-score" class="button share-button hidden">Share Score</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html> 
